@@ -1,0 +1,16 @@
+{% extends 'base-blog-public.html' %}
+
+{% block css %}
+{% endblock %}
+
+<title>{% block title %}{{ block.super }} - 博客详情{% endblock %}</title>
+
+{% block content %}
+    <!--加入博客列表模块，该模块也是在公共展示用的，根据登录用户权限不同返回不同的url进行跳转-->
+    {% include 'includes/module-detail.html' %}
+{% endblock %}
+
+{% block js %}
+    <!--引入该页面需要的css和js-->
+    {% include 'includes/module-detail-cssjs.html' %}
+{% endblock %}

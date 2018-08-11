@@ -1,0 +1,48 @@
+<!--包含module-list.html，包含博客的登录（包含另一模块module-login-search.html'）、博客正文的排列展示（包含另一模块module-list-content.html）、博客的分类、以及汇总统计-->
+{% extends 'base-blog.html' %}
+
+{% load static %}
+
+{% block title %}{{ block.super }} - 博客列表{% endblock %}
+
+{% block head %}
+    博客
+    {% if access_flag %}
+        <button type="button" class="btn btn-xs btn-outline btn-default">{{ access_flag }}</button>
+    {% endif %}
+{% endblock %}
+
+{% block breadcrumb %}
+<li>
+    <a href="/">项目主页</a>
+</li>
+{% if choose_category %}
+<li>
+    <a href="{% url 'blog:blog_list' %}">个人博客</a>
+</li>
+<li>
+    分类：<strong>{{ choose_category.name }}</strong>
+</li>
+{% else %}
+<li>
+    <strong>个人博客</strong>
+</li>
+{% endif %}
+{% endblock %}
+
+
+{% block content %}
+    <!--加入博客列表模块，该模块也是在公共展示用的，根据登录用户权限不同返回不同的url进行跳转-->
+    {% include 'includes/module-list.html' %}
+{% endblock %}
+
+
+{% block js %}
+<script>
+    $(function () {
+        $('.full-height-scroll').slimScroll({
+            height: '100%'
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% load blog_template_tags %}
+
+<div class="col-sm-6">
+    <form method="get" action="{% get_search_url user %}">
+        <div class="form-group">
+            <input type="text" placeholder="请输入您需要查找的博客标题或内容 …" value="{{ keywords }}" name="keywords" class="form-control" style="border: medium none;">
+        </div>
+    </form>
+</div>
+<div class="col-sm-6">
+    <div class="text-right">
+        {% if user.is_authenticated %}
+            <!--<button type="button" class="btn btn-outline btn-success">{{ user.username }}</button>-->
+            <a data-toggle="modal" class="btn btn-outline btn-success" href="#modal-form-logout">{{ user.username }}</a>
+        {% else %}
+            <a data-toggle="modal" class="btn btn-outline btn-warning" href="#modal-form-login" onclick="change_verify_modal()">点击登录</a>
+        {% endif %}
+    </div>
+</div>

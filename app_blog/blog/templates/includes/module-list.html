@@ -1,0 +1,220 @@
+<!--博客列表页面模块，包含博客的登录模块module-login-search.html，博客正文展示module-list-content.html-->
+{% load static %}
+
+{% load blog_template_tags %}
+
+<div class="wrapper wrapper-content animated fadeInRight blog">
+    <div class="row">
+        <div class="col-xs-12 col-md-9">
+            <div class="row">
+                <!--上方搜索框和登录框-->
+                {% include 'includes/module-login-search.html' %}
+            </div>
+
+            {% if blog_list %}
+                <!--如果该分类下有文章，则进行列表显示-->
+                <div class="row">
+                    <!--分3列，每列4个展示博客列表-->
+                    <div class="col-lg-4">
+                        {% for blog in blog_list|slice:"0:4" %}
+                            {% include 'includes/module-list-content.html' %}
+                        {% endfor %}
+                    </div>
+                    <div class="col-lg-4">
+                        {% for blog in blog_list|slice:"4:8" %}
+                            {% include 'includes/module-list-content.html' %}
+                        {% endfor %}
+                    </div>
+                    <div class="col-lg-4">
+                        {% for blog in blog_list|slice:"8:12" %}
+                            {% include 'includes/module-list-content.html' %}
+                        {% endfor %}
+                    </div>
+                </div>
+                <!--添加分页-->
+                <div class="text-right">
+                    {% include 'includes/pagination-blog.html' with page=page_obj keywords=keywords %}
+                </div>
+            {% else %}
+                <!--如果该分类下没有文章，则提示-->
+                <div class="middle-box text-center animated fadeInDown">
+                    <h1>Wow</h1>
+                    <h3 class="font-bold">还没得！</h3>
+
+                    <div class="error-desc">
+                        抱歉，该分类下还没有文章哦~
+                        <br><br>
+                        <!--判断user或者是request.user类型，返回不一样的url-->
+                        <!--原来的为{# url 'blog:blog_list' #}-->
+                        <a href="{% get_list_url user %}" class="btn btn-primary m-t">返回全部</a>
+                    </div>
+                </div>
+
+            {% endif %}
+        </div>
+
+        <div class="col-xs-12 col-md-3">
+            <div class="ibox ">
+                <div class="ibox-content">
+                    <div class="tab-content">
+                        <div id="contact-1" class="tab-pane active">
+                            <!--博客头像公告-->
+                            <div class="row m-b-lg">
+                                <div class="col-lg-4 text-center">
+                                    <h2>{{ notice.blogger }}</h2>
+
+                                    <div class="m-b-sm">
+                                        <img alt="image" class="img-circle" style="width: 50%" src="{% static 'account/default.jpg' %}">
+                                    </div>
+                                </div>
+                                <div class="col-lg-8">
+                                    <h3><a href="{% get_list_url user %}">{{ notice.title }}</a> </h3>
+
+                                    <p>{{ notice.content }}</p>
+                                    <br>
+                                    <!--<button type="button" class="btn btn-primary btn-sm btn-block"><i class="fa fa-envelope"></i> 发送消息-->
+                                    <!--</button>-->
+                                </div>
+                            </div>
+                            <!--博客分类-->
+                            <div class="row ibox-content">
+                                <!--包含博客分类小模块-->
+                                {% include 'includes/module-browse-category.html' %}
+                            </div>
+                            <div class="client-detail" style="height: 720px">  <!-- 自定义滚动区高度 -->
+                                <div class="full-height-scroll">
+                                    <!--滚动区-->
+
+                                    <!--显示最新、热门等的文章-->
+                                    <div class="tabs-container">
+                                        <ul class="nav nav-tabs">
+                                            <li class=""><a data-toggle="tab" href="#tab-1" aria-expanded="false"> 最新</a>
+                                            </li>
+                                            <li class="active"><a data-toggle="tab" href="#tab-2" aria-expanded="true">热门</a>
+                                            </li>
+                                            <li class=""><a data-toggle="tab" href="#tab-3" aria-expanded="false">评论排行</a>
+                                            </li>
+                                        </ul>
+                                        <div class="tab-content">
+                                            <div id="tab-1" class="tab-pane">
+                                                <div class="panel-body">
+                                                    {% for blog in recent_blog %}
+                                                    <i class="fa fa-newspaper-o" title="最新发布的"></i>
+                                                    <strong><a href="{% get_detail_url user blog.id %}"> {{ blog.title }}</a></strong>
+                                                    <p>{{ blog.content|slice:"30" }}</p>
+                                                    {% if not forloop.last %}<hr>{% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            <div id="tab-2" class="tab-pane active">
+                                                <div class="panel-body">
+                                                    {% for blog in hot_blog %}
+                                                    <i class="fa fa-mouse-pointer" title="点击数最多的"></i>
+                                                    <strong><a href="{% get_detail_url user blog.id %}"> {{ blog.title }}</a></strong>
+                                                    <p>{{ blog.content|slice:"30" }}</p>
+                                                    {% if not forloop.last %}<hr>{% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            <div id="tab-3" class="tab-pane">
+                                                <div class="panel-body">
+                                                    {% for blog in most_comment_blog %}
+                                                    <i class="fa fa-comments" title="评论数最多的"></i>
+                                                    <strong><a href="{% get_detail_url user blog.id %}"> {{ blog.title }}</a></strong>
+                                                    <p>{{ blog.content|slice:"30" }}</p>
+                                                    {% if not forloop.last %}<hr>{% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <br>
+
+                                    <!--按月归档显示数量-->
+                                    <h3>按月归档</h3>
+                                    <div class="list-group">
+                                        {% for ym in year_months %}
+                                        <a class="list-group-item" href="{% get_year_month_url user ym.year ym.month %}">
+                                            <h4 class="list-group-item-heading">{{ ym | date:'Y年m月' }}({% year_month_blog_nums ym.year ym.month %})</h4>
+                                        </a>
+                                        {% endfor %}
+                                    </div>
+
+                                    <!--随机推荐3篇博客-->
+                                    <h3>随机推荐</h3>
+                                    <ul class="list-group">
+                                        {% for blog in random_blog %}
+                                        <li class="list-group-item">
+                                            <span class="badge badge-primary"><i class="fa fa-eye"></i> {{ blog.views }}</span>
+                                            <a href="{% get_detail_url user blog.id %}"><h5>{{ blog.title }}</h5></a>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+
+                                    <!--按照标签统计-->
+                                    <h3>热门标签</h3>
+                                    <div class="well">
+                                        {% for tag in tags %}
+                                        <a class="btn btn-xs btn-{% random_color_flag %} btn-rounded" href="{% get_tag_url user tag.id %}">{{ tag.name }}({{ tag.blog_nums }})</a>
+                                        {% endfor %}
+                                    </div>
+
+                                    <h3>网站统计</h3>
+                                    <div class="well">
+                                        <p>文章总数：{{ published_nums }}</p>
+                                        <p>分类总数：{{ categories.count }}</p>
+                                        <p>标签总数：{{ tags.count }}</p>
+                                        <p>评论统计：{{ num_comment }}</p>
+                                        <p>读者交流：{{ num_other_comment }}</p>
+                                        <p>字数统计：{{ num_words }}</p>
+                                        <p>最后更新：{{ recent_blog.0.publish_time }}</p>
+                                    </div>
+
+                                    <hr/>
+                                    <strong>时间轴</strong>
+                                    <div id="vertical-timeline" class="vertical-container light-timeline">
+
+                                        <div class="vertical-timeline-block">
+                                            <div class="vertical-timeline-icon yellow-bg">
+                                                <i class="fa fa-phone"></i>
+                                            </div>
+
+                                            <div class="vertical-timeline-content">
+                                                <h2>完成我的博客</h2>
+                                                <p>完成博客的基础功能</p>
+                                                <span class="vertical-date">即将 <br><small>x月x日</small></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="vertical-timeline-block">
+                                            <div class="vertical-timeline-icon lazur-bg">
+                                                <i class="fa fa-user-md"></i>
+                                            </div>
+
+                                            <div class="vertical-timeline-content">
+                                                <h2>博客功能优化</h2>
+                                                <p>持续了解新的知识，为新工作准备~~</p>
+                                                <span class="vertical-date">未来 <br><small>12月12日</small></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p>
+                                <button type="button" class="btn btn-block btn-outline btn-success">Tips：下拉显示更多</button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--引入登录的模态框-->
+{% include 'includes/module-login-modal.html' %}
+
+
+

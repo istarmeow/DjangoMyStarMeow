@@ -1,0 +1,37 @@
+{% extends 'base-blog.html' %}
+
+{% load static %}
+
+{% block css %}
+{% endblock %}
+
+{% block title %}{{ block.super }} - 博客详情{% endblock %}
+
+{% block head %}博客{% endblock %}
+
+{% block breadcrumb %}
+<li>
+    <a href="/">项目主页</a>
+</li>
+<li>
+    <a href="{% url 'blog:blog_list' %}">个人博客</a>
+</li>
+<li>
+    分类：<a href="{% url 'blog:blog_list_with_category' blog_article.category.id %}">{{ blog_article.category.name }}</a>
+</li>
+<li>
+    <strong>{{ blog_article.title }}</strong>
+</li>
+
+{% endblock %}
+
+
+{% block content %}
+    <!--包含博客详情的模块-->
+    {% include 'includes/module-detail.html' %}
+{% endblock %}
+
+{% block js %}
+    <!--引入该页面需要的css和js-->
+    {% include 'includes/module-detail-cssjs.html' %}
+{% endblock %}

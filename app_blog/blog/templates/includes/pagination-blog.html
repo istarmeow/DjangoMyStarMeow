@@ -1,0 +1,25 @@
+<div class="btn-group">
+    {% if page.number > 1 %}
+    <a href="?keywords={{ keywords }}&page=1" aria-label=""><button type="button" class="btn btn-white">首页</button></a>
+    {% endif %}
+
+    {% if page.has_previous %}
+    <a href="?keywords={{ keywords }}&page={{ page.previous_page_number }}"><button type="button" class="btn btn-white">&laquo;</button></a>
+    {% endif %}
+
+    {%  for pg in page.paginator.page_range %}
+        {% if page.number == pg %}
+            <a href="?keywords={{ keywords }}&page={{ pg }}"><button type="button" class="btn btn-white active">{{ pg }}</button></a>
+        {% elif pg > page.number|add:'-3' and pg < page.number|add:'3' %}
+            <a href="?keywords={{ keywords }}&page={{ pg }}"><button type="button" class="btn btn-white">{{ pg }}</button></a>
+        {% endif %}
+    {% endfor %}
+
+    {% if page.has_next %}
+        <a href="?keywords={{ keywords }}&page={{ page.next_page_number }}"><button type="button" class="btn btn-white">&raquo;</button></a>
+    {% endif %}
+
+    {% if page.number != page.paginator.num_pages %}
+        <a href="?keywords={{ keywords }}&page={{ page.paginator.num_pages }}" aria-label=""><button type="button" class="btn btn-white">尾页</button></a>
+    {% endif %}
+</div>

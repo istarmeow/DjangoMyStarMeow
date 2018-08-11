@@ -1,0 +1,63 @@
+{% load blog_template_tags %}
+
+
+<div class="ibox">
+    <div class="ibox-content" id="id_blog_content_{{ blog.id }}">
+        <!--原来的为{# url 'blog:blog_detail' blog.id #}，加入权限后如下-->
+        <a href="{% get_detail_url user blog.id %}" class="btn-link">
+            <h2>
+                {{ blog.title }}
+            </h2>
+        </a>
+        <div class="small m-b-xs">
+            <strong>{{ blog.author.username }}</strong> <span class="text-muted"><i class="fa fa-clock-o"></i> {{ blog.publish_time }}</span>
+        </div>
+        <p>
+            {{ blog.content|slice:"60" }}
+            <!--{{ blog.get_content_as_markdown|slice:"30" }}-->
+        </p>
+        <div class="row">
+            <div class="col-md-5">
+                <h5>标签：</h5>
+                {% for tag in blog.tags.all %}
+                <a href="{% get_tag_url user tag.id %}">
+                    <button class="btn btn-{% random_color_flag %} btn-xs" type="button">{{ tag.name }}</button>
+                </a>
+                {% endfor %}
+            </div>
+            <div class="col-md-3">
+                <h5>分类：</h5>
+                <a href="{% get_category_url user blog.category.id %}">
+                    <button class="btn btn-xs" type="button">{{ blog.category.name }}</button>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <div class="small text-right">
+                    <h5>状态：</h5>
+                    <div> <i class="fa fa-comments-o"> </i> {{ blog.comments.count }} 评论 </div>
+                    <i class="fa fa-eye"> </i> {{ blog.views }} 浏览
+                </div>
+            </div>
+        </div>
+
+        {% if user.is_superuser %}
+            <!--删除按钮，超级管理员才显示-->
+            <div class="row text-right" id="id_delete_button_{{ blog.id }}" style="display: none">
+                <div class="col-md-12 ">
+                    <a href="{% url 'blog:blog_delete' blog.id %}" title="删除"><i class="fa fa-trash-o"></i></a>
+                </div>
+            </div>
+
+            <!--是否显示删除按钮js-->
+            <script>
+                document.getElementById("id_blog_content_{{ blog.id }}").onmouseout=function(){//当鼠标滑出
+                    document.getElementById("id_delete_button_{{ blog.id }}").style.display="none";	//改变div1的display属性
+                };
+                document.getElementById("id_blog_content_{{ blog.id }}").onmouseover=function(){ //当鼠标经过
+                    document.getElementById("id_delete_button_{{ blog.id }}").style.display="block";
+                }
+            </script>
+        {% endif %}
+
+    </div>
+</div>

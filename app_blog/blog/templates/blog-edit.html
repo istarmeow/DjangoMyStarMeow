@@ -1,0 +1,290 @@
+{% extends 'base-blog.html' %}
+
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/css/select2.min.css" />
+
+<link rel="stylesheet" href="{% static 'editor.md-master/css/editormd.min.css' %}" />
+{% endblock %}
+
+{% block title %}{{ block.super }} - 编辑博客{% endblock %}
+
+{% block head %}
+    博客
+
+{% endblock %}
+
+{% block breadcrumb %}
+<li>
+    <a href="/">项目主页</a>
+</li>
+<li>
+    <a href="{% url 'blog:blog_list' %}">个人博客</a>
+</li>
+{% if 'update' in request.path %}
+<li>
+    <a href="{% url 'blog:blog_detail' blog_article.id %}">{{ blog_article.title }}</a>
+</li>
+{% endif %}
+<li>
+    <strong>编辑博客</strong>
+</li>
+{% endblock %}
+
+
+{% block content %}
+<div class="wrapper wrapper-content  animated fadeInRight blog">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-content">
+                    <form action="." method="post">
+                        <div class="row">
+                            <div class="col-xs-12 col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.category.id_for_label }}">{{ form.category.label_tag }}</label>
+                                    <select class="form-control select2" name="category" id="{{ form.category.id_for_label }}" style="width: 100%">
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}" {% if form.category.value == category.id %} selected {% endif %} style="height: 30px">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="{{ form.tags.id_for_label }}">{{ form.tags.label_tag }}</label>
+                                    <select class="select2 select2-hidden-accessible" name="tags" id="{{ form.tags.id_for_label }}" multiple="" data-placeholder="可选择多个标签"  aria-hidden="true" style="width: 100%;">
+                                        {% for tag in tags %}
+                                        <option value="{{ tag.id }}" {% if tag.id in form.tags.value %} selected {% endif %}>{{ tag.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.status.id_for_label }}">{{ form.status.label_tag }}</label>
+                                    <select class="form-control select2" name="status" id="{{ form.status.id_for_label }}" style="width: 100%">
+                                        {% for status in status_choices %}
+                                        <option value="{{ status.status_code }}" {% if form.status.value == status.status_code %} selected {% endif %}>{{ status.status_value }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="{{ form.publish_time.id_for_label }}">{{ form.publish_time.label_tag }}</label>
+                                    <!--<input value="{% if form.publish_time.value %}{{ form.publish_time.value }}{% endif %}" name="publish_time" id="{{ form.publish_time.id_for_label }}" type="text" class="form-control">-->
+                                    <input class="form-control" value="{% if form.publish_time.value %}{{ form.publish_time.value }}{% endif %}" name="publish_time" id="{{ form.publish_time.id_for_label }}" type="text" placeholder="YYYY-MM-DD hh:mm:ss" onclick="laydate({istime: true, format: 'YYYY-MM-DD hh:mm:ss'})">
+                                    <p class="text-warning">{{ form.publish_time.errors }}</p>
+                                </div>
+                            </div>
+
+
+                            <div class="col-xs-12 col-md-8">
+                                <div class="form-group">
+                                    <label for="{{ form.title.id_for_label }}">{{ form.title.label_tag }}</label>
+                                    <input value="{% if form.title.value %}{{ form.title.value }}{% endif %}" name="title" id="{{ form.title.id_for_label }}" type="text" class="form-control">
+                                    <p class="text-warning">{{ form.title.errors }}</p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="{{ form.content.id_for_label }}">{{ form.content.label_tag }}</label>
+                                    <!--<textarea name="content" cols="40" rows="10" id="{{ form.content.id_for_label }}" class="form-control"></textarea>-->
+                                    <div id="blog_edit_content_md">
+                                        <textarea class="form-control" name="content" placeholder="输入博客内容" id="{{ form.content.id_for_label }}">{% if form.content.value %}{{ form.content.value }}{% endif %}</textarea>
+                                    </div>
+                                    <p class="text-warning">{{ form.content.errors }}</p>
+                                </div>
+
+                                {% csrf_token %}
+
+
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="hr-line-dashed"></div>
+                            <div class="col-md-5">
+                                <div class="form-group" style="float: right">
+                                    <button class="btn btn-primary" type="submit">保存内容</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/js/select2.full.min.js"></script>
+<script>
+    $(document).ready(function() {
+        //Initialize Select2 Elements 初始化多选元素
+        $('.select2').select2();
+  })
+</script>
+
+
+<script src="{% static 'editor.md-master/editormd.min.js' %}"></script>
+
+<script type="text/javascript">
+    let editor;
+    $(function () {
+        editor = editormd("blog_edit_content_md", {
+            path: "{% static 'editor.md-master/lib/' %}", // 加载模块依赖包环境
+            width: "100%",  //设置宽度
+            placeholder: "请输入博客内容 ...",  // 输入框提示文字
+            height: 600,
+            // autoHeight : true,  // 自动高度
+            syncScrolling: "single",  // 预览同步
+            saveHTMLToTextarea: true,  //注意:这个配置，方便post提交表单,关乎后端是否可以获取到值
+            watch: false,  // 开启预览侧边栏
+            tocm: true, // Using [TOCM]
+            tex: true, // 开启科学公式TeX语言支持，默认关闭
+            flowChart: true, // 开启流程图支持，默认关闭
+            sequenceDiagram: true, // 开启时序/序列图支持，默认关闭,
+
+            // theme: "dark",
+            // previewTheme : "dark",
+            // editorTheme : "pastel-on-dark",
+            searchReplace: true,
+            emoji: true,
+            taskList: true,
+
+            //dialogLockScreen : false,     // 设置弹出层对话框不锁屏，全局通用，默认为true
+            //dialogShowMask : false,         // 设置弹出层对话框显示透明遮罩层，全局通用，默认为true
+            //dialogDraggable : false,        // 设置弹出层对话框不可拖动，全局通用，默认为true
+            //dialogMaskOpacity : 0.4,        // 设置透明遮罩层的透明度，全局通用，默认值为0.1
+            //dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为#fff
+
+            //  imageUpload参数在console/markdown_editor/plugins/image-dialog/image-dialog.js文件中进行if判断
+            //  利用其传参特性将csrf_token传入image-dialog.js文件进行form表单生成
+            imageUpload: "true",
+            imageFormats: ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+            imageUploadURL: "{% url 'blog:upload_image' %}",
+            imageCsrfToken: "{% csrf_token %}",
+
+            /*
+             {
+                success   : 0 | 1,   // 0 表示上传失败，1 表示上传成功
+                message   : "提示的信息，上传成功或上传失败及错误信息等。",
+                url       : "远程图片地址"    //上传成功时才返回，就是图片的访问地址
+             }
+             */
+
+            // 自定义工具栏
+            toolbarIcons: function() {
+                return ["undo", "redo", "|", "bold", "del", "italic", "quote", "ucwords", "uppercase", "lowercase", "|", "list-ul", "list-ol", "hr", "|",
+                    "link", "reference-link", "image",  "emoji", "code", "code-block", "py_code", "html_code", "datetime", "|", "star_icon", "||", "watch", "preview", "fullscreen", "clear"]
+            },
+            toolbarIconsClass : {
+                html_code: "fa-html5",  // 指定一个FontAawsome的图标类
+            },
+            toolbarIconTexts : {
+                py_code: "Py",  // 如果没有图标，则可以这样直接插入内容，可以是字符串或HTML标签
+            },
+
+            // 用于增加自定义工具栏的功能，可以直接插入HTML标签，不使用默认的元素创建图标
+            toolbarCustomIcons : {
+                star_icon : "<i class='fa fa-coffee' onclick=\"alert('欢迎使用Markdown');\"></i>"
+            },
+
+            // 按钮提示文字
+            lang : {
+                toolbar : {
+                    html_code : "插入HTML代码块",  // 自定义按钮的提示文本，即title属性
+                    py_code : "插入Python代码块",
+                }
+            },
+
+            // 自定义工具栏按钮的事件处理
+            toolbarHandlers : {
+                py_code : function(cm, icon, cursor, selection) {
+
+                    //var cursor    = cm.getCursor();     //获取当前光标对象，同cursor参数
+                    //var selection = cm.getSelection();  //获取当前选中的文本，同selection参数
+
+                    // 替换选中文本，如果没有选中文本，则直接插入
+                    cm.replaceSelection('\n```python\n' + selection + '\n```\n\n');
+                    /* 将插入以下的结果：
+                        ```python
+
+                        ```
+
+                    */
+
+                    // 如果当前没有选中的文本，将光标移到要输入的位置，也就是当前行cursor.line的下一行，位置为cursor.ch的+1（+0也可以，因为没有字符）
+                    if(selection === "") {
+                        cm.setCursor(cursor.line + 2, cursor.ch + 1);
+                    }
+
+                    // this == 当前editormd实例
+                    // console.log("py_code =>", this, cm, icon, cursor, selection);
+                },
+
+                html_code : function(cm, icon, cursor, selection) {
+                    // 替换选中文本，如果没有选中文本，则直接插入
+                    cm.replaceSelection('\n```html\n' + selection + '\n```\n\n');
+                    if(selection === "") {
+                        cm.setCursor(cursor.line + 2, cursor.ch + 1);
+                    }
+                },
+
+            },
+
+            onload: function () {
+                console.log('Markdown加载完成');
+            },
+
+        });
+    });
+
+
+    // 监听粘贴事件上传图片
+    window.onload = function() {  // 也可以使用$(function () {     });
+        $("#blog_edit_content_md").on('paste', function (event) {
+            console.log('#blog_edit_content_md粘贴监听');
+            let data = event.clipboardData;  //粘贴的内容。不只是文本，也可以是图片和文件。
+            let items = (event.clipboardData || event.originalEvent.clipboardData).items;
+            for (let index in items) {
+                let item = items[index];
+                if (item.kind === "string") {
+                    item.getAsString(function (str) {
+                        console.log('粘贴字符串：' + str);
+                    })
+                } else if (item.kind === "file") {
+                    let blob = item.getAsFile();
+                    let reader = new FileReader();
+
+                    // 数据读取成功完成时触发
+                    reader.onload = function (event) {
+                        let base64data = event.target.result;  //target表示事件目标（DOM树的最上级）
+                        //ajax上传图片
+                        $.post(
+                            "{% url 'blog:upload_paste_image' %}",
+                            {base64data: base64data, csrfmiddlewaretoken: '{{ csrf_token }}'},
+                            function (data, status) {
+                                console.log('POST状态：' + status);
+                                let jsonobj = eval("(" + data + ")");
+                                if (jsonobj['image_url_md']) {
+                                    console.log('粘贴图片：'+jsonobj['image_url_md']);
+
+                                    // 向editor输入框中插入返回的图片路径值，加\n代表换行插入
+                                    editor.insertValue("\n" + jsonobj['image_url_md'] + "\n");
+                                } else {
+                                    alert(jsonobj['upload_info'])
+                                }
+                            }
+                        );
+                        // 上传图片
+                    };
+                    reader.readAsDataURL(blob);  // 这个不知道什么用
+                }
+            }
+        });
+    }
+
+</script>
+
+// 时间选择器
+<script src="{% static 'hAdmin/js/plugins/layer/laydate/laydate.js' %}"></script>
+{% endblock %}

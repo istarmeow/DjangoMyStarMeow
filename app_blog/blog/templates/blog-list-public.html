@@ -1,0 +1,18 @@
+{% extends 'base-blog-public.html' %}
+
+<title>{% block title %}{{ block.super }} - 博客列表{% endblock %}</title>
+
+{% block content %}
+    <!--加入博客列表模块，该模块也是在公共展示用的，根据登录用户权限不同返回不同的url进行跳转-->
+    {% include 'includes/module-list.html' %}
+{% endblock %}
+
+{% block js %}
+<script>
+    $(function () {
+        $('.full-height-scroll').slimScroll({
+            height: '100%'
+        });
+    });
+</script>
+{% endblock %}

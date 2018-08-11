@@ -1,0 +1,25 @@
+{% load static %}
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/vs.min.css">
+<link href="{% static 'hAdmin/custom.css' %}" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.8.6/showdown.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(() => {
+        let src = $('#content_to_md').text();
+        let converter = new showdown.Converter({tables: true, emoji: true});
+        // converter.setOption('tables', true);  // 和使用showdown.Converter({tables: true})效果一致
+        // converter.setOption('emoji', true);
+        let html = converter.makeHtml(src);
+        $('#content_to_md').html(html);
+        hljs.initHighlightingOnLoad();
+    });
+</script>
+
+<script>
+    //添加访问顶部按钮
+    let gohome = '<div class="gohome"><a class="animated bounceInUp" href="#gotoTop" title="返回顶部"><i class="fa fa-hand-pointer-o"></i></a></div>';
+    $('body').append(gohome);
+</script>

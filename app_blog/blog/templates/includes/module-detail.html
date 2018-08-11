@@ -1,0 +1,181 @@
+<!--博客详情页面模块-->
+{% load static %}
+
+{% load blog_template_tags %}
+
+{% load mptt_tags %}
+
+
+<script src="{% static 'hAdmin/js/jquery.min.js' %}"></script>
+
+<div class="wrapper wrapper-content  animated fadeInRight article">
+    <div class="row">
+        <div class="col-xs-12 col-md-9">
+            <div class="row">
+                <div class="col-lg-10 col-lg-offset-1">
+                    <div class="ibox">
+                        <!--上方搜索框和登录框-->
+                        <div class="ibox-title" style="min-height: 60px; height:auto!important; ">
+                            {% include 'includes/module-login-search.html' %}
+                        </div>
+
+                        <div class="ibox-content">
+                            <div class="pull-right">
+                                {% for tag in blog_article.tags.all %}
+                                <a href="{% get_tag_url user tag.id %}">
+                                    <button class="btn btn-{% random_color_flag %} btn-xs" type="button" title="标签"><i class="fa fa-tag"></i> {{ tag.name }}</button>
+                                </a>
+                                {% endfor %}
+                            </div>
+
+                            <div class="text-center article-title">
+                                <h1>{{ blog_article.title }}</h1>
+                            </div>
+                            <div class="text-right">
+                                <span title="发布时间"><i class="fa fa-calendar"></i> {{ blog_article.publish_time }} &nbsp;&nbsp;</span>
+                                <span title="所属分类"><a href="{% get_category_url user blog_article.category.id %}"><i class="fa fa-reorder"></i> {{ blog_article.category.name }}</a> &nbsp;&nbsp;</span>
+                                <span title="浏览量"><i class="fa fa-eye"></i> {{ blog_article.views }}次浏览 &nbsp;&nbsp;</span>
+                                <span title="浏览量"><i class="fa fa-font"></i> {{ blog_article.content|length }}个字 &nbsp;&nbsp;</span>
+                                {% if user.is_superuser %}
+                                    <span title="编辑博客"><a href="{% url 'blog:blog_update' blog_article.id %}"><i class="fa fa-edit"></i> 编辑</a> &nbsp;&nbsp; </span>
+                                    <span title="删除博客"><a href="{% url 'blog:blog_delete' blog_article.id %}"><i class="fa fa-trash-o"></i> 删除</a> </span>
+                                {% endif %}
+
+                            </div>
+                            <hr>
+                            <p id="content_to_md">{{ blog_article.content }}</p>
+
+                            <hr>
+
+                            <div class="row">
+                                <div class="col-md-4 text-left">
+                                    {% if blog_article.prev_article %}
+                                    <a href="{% get_detail_url user blog_article.prev_article.id %}">
+                                        <i class="fa fa-chevron-left"></i>   {{ blog_article.prev_article.title }}
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 col-md-offset-4 text-right">
+                                    {% if blog_article.next_article %}
+                                    <a href="{% get_detail_url user blog_article.next_article.id %}">
+                                        {{ blog_article.next_article.title }}   <i class="fa fa-chevron-right"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <div class="row">
+                                <div class="col-lg-12">
+
+                                    <h2>评论<small>[<i class="fa fa-comments">   评论{{ num_comment }}条</i>， <i class="fa fa-comments-o">   交流{{ num_other_comment }}条</i>]</small>：</h2>
+                                    <div class="social-feed-box">
+                                        <form id="jsStayForm">
+                                            <div class="social-avatar">
+                                                <a class="pull-left">
+                                                    <img alt="" src="{{ user.user_profile.image.url }}">
+                                                </a>
+                                                <div class="media-body">
+                                                    <textarea name="content" class="form-control" placeholder="填写评论..."></textarea>
+                                                </div>
+                                            </div>
+                                            <br>
+                                            <input name="blog_id" value="{{ blog_article.id }}" hidden />
+                                            <div class="social-footer">
+                                                <div class="social-comment">
+                                                    <div class="media-body">
+                                                        <div class="pull-left">
+                                                            <p>既然你都看完了，那就评论一下吧~</p>
+                                                        </div>
+                                                        <div class="pull-right">
+                                                            {% if user.is_authenticated %}
+                                                            <button type="button" id="jsStayBtn" class="btn btn-info btn-rounded" >评论</button>
+                                                            {% else %}
+                                                            <a data-toggle="modal" class="btn btn-outline btn-warning" href="#modal-form-login" onclick="change_verify_modal()">点击登录</a>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <script>
+                                    $(function(){
+                                        $('#jsStayBtn').on('click', function(){
+                                            $.ajax({
+                                                cache: false,
+                                                type: "POST",
+                                                url:"{% url 'comment:blog_comment_create' %}",
+                                                data:$('#jsStayForm').serialize(),
+                                                dateType:"json",
+                                                async: true,
+                                                beforeSend:function(xhr, settings){
+                                                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+                                                },
+                                                success: function(data) {
+                                                    if(data.status === 'success'){
+                                                        alert("提交成功");
+                                                        window.location.reload();  //刷新当前页面.
+                                                    } else if(data.status === 'fail'){
+                                                        alert("提交发生错误，内容不能为空");
+                                                    }
+                                                },
+                                            });
+                                        });
+                                    })
+
+                                    </script>
+
+                                    {% autoescape off %}
+                                        {% comment_list_view request 1 blog_article csrf_token blog_article.comment_all %}  <!-- 模板标签，表示前端已链接列表形式展示 -->
+                                    {% endautoescape %}
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-md-3">
+            <div class="ibox ">
+                <div class="ibox-content">
+                    <!--包含博客分类小模块-->
+                    {% include 'includes/module-browse-category.html' %}
+                </div>
+
+                <div class="ibox-content">
+                    <h3>聚合推荐</h3>
+                    <div class="list-group" style="word-wrap:break-word;">  <!-- 超出换行 -->
+                        {% for blog in similar_blog %}
+                        <a class="list-group-item {% if forloop.first %} active {% endif %}" href="{% get_detail_url user blog.id %}">
+                            <span class="badge badge-outline"><i class="fa fa-eye"></i> {{ blog.views }}</span>
+                            <h3 class="list-group-item-heading">{{ blog.title }}</h3>
+                            <p class="text-muted">
+                                <small>
+                                    <i class="fa fa-calendar"></i> {{ blog.publish_time }}
+                                </small>
+                            </p>
+                            <p class="text-muted">
+                                <small>
+                                    <i class="fa fa-tags"></i> {% for tag in blog.tags.all %}{{ tag }}{% if not forloop.last %} | {% endif %}{% endfor %}
+                                </small>
+                            </p>
+                            <p class="list-group-item-text">{{ blog.content | slice:"50" }}</p>
+                        </a>
+                        {% empty %}
+                            暂无推荐
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--引入登录的模态框-->
+{% include 'includes/module-login-modal.html' %}
+

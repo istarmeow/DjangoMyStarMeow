@@ -1,0 +1,103 @@
+<!--登录模态框-->
+<div id="modal-form-login" class="modal fade in" aria-hidden="true" style="display: none; padding-right: 6px;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-6 b-r">
+                        <h3 class="m-t-none m-b">登录</h3>
+                        <form role="form" action="{% url 'account:login' %}?next={%if next_url%}{{ next_url }}{% else %}{{ request.path }}{% endif %}" method="post">
+                            <div class="form-group">
+                                <label>用户名：</label>
+                                <input name="username" type="text" placeholder="请输入用户名" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>密码：</label>
+                                <input name="password" type="password" placeholder="请输入密码" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>验证码：</label>
+                                <input ype="text" name="verify" placeholder="请输入验证码" class="form-control">
+                            </div>
+                            <input type="hidden" name="next" value="{{ request.path }}" />
+                            {% csrf_token %}
+                            <div>
+                                <button class="btn btn-sm btn-primary" type="submit"><strong>登录</strong>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-sm-6">
+                        <h4>验证码</h4>
+                        <p>请将验证码输入到验证码框内</p>
+                        <br><br>
+                        <p class="text-center" id="id_change_verify_modal" onclick="change_verify_modal()">
+                            <!--<img src="{% url 'account:verify_image' 150 50 %}" />-->
+                            <img src="" />
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--登出模态框-->
+<div id="modal-form-logout" class="modal fade in" aria-hidden="true" style="display: none; padding-right: 6px;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-6 b-r">
+                        <h3 class="m-t-none m-b">退出</h3>
+                        <h1>Aha</h1><br><br>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-white m-t-n-xs" data-dismiss="modal">关闭</button>
+                            <a class="btn btn-sm btn-warning pull-right m-t-n-xs" href="{% url 'account:logout' %}">
+                                <strong>确认退出</strong>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <h4>即将退出</h4>
+                        <p>请确认</p>
+                        <p class="text-center">
+                            <a href="#"><i class="fa fa-sign-in big-icon"></i></a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--模态框登录刷新验证码功能-->
+<script>
+    function change_verify_modal() {
+        // alert('切换验证码');
+        let url = "{% url 'account:verify_image' 150 50 %}";
+        let xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);  //get请求，请求地址，是否异步
+        xhr.responseType = "blob";
+
+        // 如果是跨域请求，需要用到下面两行代码，具体也不知道怎么用
+        xhr.setRequestHeader("client_type", "DESKTOP_WEB");
+        xhr.setRequestHeader("desktop_web_access_key", _desktop_web_access_key="");
+
+        xhr.onload = function() {
+            if (this.status === 200) {
+                let blob = this.response;
+                // 二进制数据拿到了，那么要把它放在一个 html标签中，并且应该是img标签
+                let img = document.createElement("img");
+                img.onload = function(e) {
+                    window.URL.revokeObjectURL(img.src);
+                };
+                //有问题，将blob直接加载到img中，由于blob太大，会有性能影响，上方函数就是释放
+                img.src = window.URL.createObjectURL(blob);
+                // alert(img);
+                $("#id_change_verify_modal").html(img);
+            }
+        };
+        xhr.send();
+    }
+</script>
