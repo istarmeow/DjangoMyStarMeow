@@ -1,0 +1,156 @@
+{% extends 'backend/wiki_base.html' %}
+
+{% load wiki_tag_color %}
+
+{% block title %}标签管理 | WiKi系统{% endblock %}
+
+{% block head %}标签{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'wiki:wiki_index' %}">主页</a></li>
+    <li class="breadcrumb-item active">标签管理</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <h5 class="mb-2">标签列表</h5>
+
+        <div class="row">
+            {% for tag in tags %}
+            <div class="col-md-3 col-sm-6 col-12">
+                <div class="info-box">
+                    <!--使用模版标签，随机class颜色-->
+                    <span class="info-box-icon bg-{% random_color %}"><i class="fa fa-flag-o"></i></span>
+
+                    <div class="info-box-content">
+                        <span class="info-box-text">{{ tag.name }}</span>
+                        <span class="info-box-number">
+                            共{{ tag.wiki_content.count }}篇WiKi
+                            <span class="float-sm-right"><a class="btn btn-tool" href="{% url 'wiki:del_tag' tag.id %}" onclick="delete_confirmation()" title="删除标签"><i class="fa fa-remove"></i></a></span>
+                            <span class="float-sm-right"><button class="btn btn-tool" data-target="#EditTag" onclick="edit_tag(this, {{ tag.id }}, '{{ tag.name }}')" title="修改标签"><i class="fa fa-circle-o"></i></button></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            <div class="col-md-3 col-sm-6 col-12">
+                <div class="mt-2 mb-3">
+                    添加标签
+                    <span style="color: #0ac33e; font-size: small" id="js_add_tag_error"></span>
+                </div>
+                <form class="input-group input-group-sm" id="js_add_tag_form">
+                    <input type="text" name="name" class="form-control" placeholder="标签名称" />
+                    <span class="input-group-append">
+                        <input type="button" class="btn btn-default" id="js_add_tag_btn" value="添加" />
+                    </span>
+                    {% csrf_token %}
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<form method="post" action="{% url 'wiki:update_tag' %}" class="form-horizontal" role="form" onsubmit="return check_form()" style="margin: 20px;">
+    <div class="modal modal-info fade" id="EditTag" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 class="modal-title">
+                        更新标签名称
+                    </h4>
+                </div>
+
+                <div class="modal-body">
+                    <form class="form-horizontal" role="form">
+                        <!--《表单隐藏域》隐藏id属性，方便传入后端-->
+                        <input type="hidden" class="form-control"  name="tag_id" id="tag_id" />
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">名称</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control"  name="tag_name" id="tag_name" required placeholder="标签旧名称" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">更新名称</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control"  name="tag_new_name" id="tag_new_name" required placeholder="标签新名称">
+                            </div>
+                        </div>
+
+                        {% csrf_token %}
+
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <input type="hidden"/>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        提交
+                    </button><span id="tip"> </span>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+</form>
+
+{% endblock %}
+
+{% block js %}
+<script language="JavaScript">
+    //刷新当前页面
+    function refresh(){
+       window.location.reload();
+    }
+</script>
+
+<script>
+    $(function () {
+        //监听这个button，用户如果点击了button。我们来向这个url进行post请求。
+        // 将我们的表单进行序列化。
+        $("#js_add_tag_btn").on('click', function () {
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: "{% url 'wiki:add_tag' %}",
+                data: $('#js_add_tag_form').serialize(),
+                async: true,
+                success: function (data) {
+                    if(data.valid_status === "success"){
+                        $("#js_add_tag_form")[0].reset();
+                        $("#js_add_tag_error").html('');
+                        refresh();  //刷新当前页面
+                    }else if(data.valid_status === "fail"){
+                        $("#js_add_tag_error").html(data.msg);
+                    }
+                },
+            });
+        });
+    })
+</script>
+
+<script>
+    function delete_confirmation() {
+        if (!confirm("确认删除？")) {
+            window.event.returnValue = false;
+        }
+    }
+</script>
+
+<!--模态框更新值-->
+<script>
+    function edit_tag(obj, tag_id, tag_name) {
+        $('#tag_id').val(tag_id);
+        $('#tag_name').val(tag_name);
+        // 最后显示出模态框
+        $('#EditTag').modal('show');
+    }
+</script>
+{% endblock %}

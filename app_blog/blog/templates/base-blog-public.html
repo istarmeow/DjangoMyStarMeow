@@ -1,0 +1,35 @@
+<!--博客对外展示基础模板-->
+<!DOCTYPE html>
+{% load static %}
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}吾星喵{% endblock %}</title>
+
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}">
+    <link href="{% static 'hAdmin/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'hAdmin/css/font-awesome.min.css' %}" rel="stylesheet">
+    <link href="{% static 'hAdmin/css/animate.css' %}" rel="stylesheet">
+    <link href="{% static 'hAdmin/css/style.css' %}" rel="stylesheet">
+
+    {% block css %}{% endblock %}
+</head>
+
+<body class="gray-bg" id="gotoTop">
+
+{% block content %}
+{% endblock %}
+
+<!-- 全局js -->
+<script src="{% static 'hAdmin/js/jquery.min.js' %}"></script>
+<script src="{% static 'hAdmin/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'hAdmin/js/plugins/slimscroll/jquery.slimscroll.min.js' %}"></script>
+
+{% block js %}{% endblock %}
+
+</body>
+
+</html>

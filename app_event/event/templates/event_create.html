@@ -1,0 +1,150 @@
+{% extends 'base_event.html' %}
+{% load staticfiles %}
+{% block title %}事件系统{% endblock %}
+
+{% block head %}事件管理{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="#">主页</a></li>
+<li class="breadcrumb-item"><a href="{% url 'event:list' %}">事件列表</a></li>
+<li class="breadcrumb-item active">创建事件</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- left column -->
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">创建事件</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <form role="form" action="{% url 'event:event_create' %}" method="post" enctype="multipart/form-data">
+                        <!--<label for="id_title">事件标题:</label> -->
+                        <!--<input type="text" name="title" maxlength="50" required id="id_title" />-->
+                        <div class="card-body">
+                            <!--事件标题-->
+                            <div class="form-group">
+                                <label for="{{ event_content_form.title.id_for_label }}">{{ event_content_form.title.label }}</label>
+                                <input type="text" class="form-control"
+                                       name="title" id="{{ event_content_form.title.id_for_label }}"
+                                       placeholder="输入事件主题"
+                                       value="{% if event_content_form.title.value %}{{ event_content_form.title.value }}{% endif %}"
+                                >
+                                <p><div class="text-warning"><small>{{ event_content_form.title.errors }}</small></div></p>
+                            </div>
+                            <!--事件描述-->
+                            <div class="form-group">
+                                <label for="{{ event_content_form.content.id_for_label }}">{{  event_content_form.content.label }}</label>
+                                <div id="content_md">
+                                    <!--添加Markdown编辑器-->
+                                    <textarea name="content"
+                                              id="{{ event_content_form.content.id_for_label }}"
+                                              placeholder="输入事件描述">{% if event_content_form.content.value %}{{ event_content_form.content.value }}{% endif %}</textarea>
+                                </div>
+                                <p><div class="text-warning"><small>{{ event_content_form.content.errors }}</small></div></p>
+                            </div>
+                            <!--图片选择，可以为空-->
+                            <div class="form-group">
+                                <label for="{{ event_content_form.image.id_for_label }}">{{ event_content_form.image.label }}</label>
+                                <!--<div class="input-group">-->
+                                    <!--<div class="custom-file">-->
+                                        <!--<input type="file" name="image" class="custom-file-input" id="{{ event_content_form.image.id_for_label }}">-->
+                                        <!--<label class="custom-file-label" for="{{ event_content_form.image.id_for_label }}">点击选择图片{{ event_content_form.image.value }}</label>{-->
+                                    <!--</div>-->
+                                <!--</div>-->
+                                <input type="file" name="image" class="form-control" id="{{ event_content_form.image.id_for_label }}">
+                            </div>
+                            <!--项目选择，可以不选-->
+                            <div class="form-group">
+                                <label for="{{ event_content_form.project.id_for_label }}">{{ event_content_form.project.label }}</label>
+                                <select class="form-control" name="project" id="{{ event_content_form.project.id_for_label }}">
+                                    <option>{% for project_select in event_content_form.project %}{{ project_select }}{% endfor %}</option>
+                                </select>
+                            </div>
+                            <!--事件分类，必选-->
+                            <div class="form-group">
+                                <label for="{{ event_content_form.category.id_for_label }}">{{ event_content_form.category.label }}</label>
+                                <select class="form-control" name="category" id="{{ event_content_form.category.id_for_label }}">
+                                    <option>{% for category_select in event_content_form.category %}{{ category_select }}{% endfor %}</option>
+                                </select>
+                                <p><div class="text-warning"><small>{{ event_content_form.category.errors }}</small></div></p>
+                            </div>
+                            <!--时间等级，可以不选-->
+                            <div class="form-group">
+                                <label for="{{ event_content_form.level.id_for_label }}">{{ event_content_form.level.label }}</label>
+                                <select class="form-control" name="level" id="{{ event_content_form.level.id_for_label }}">
+                                    <option>{% for level_select in event_content_form.level %}{{ level_select }}{% endfor %}</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ event_content_form.end_time.id_for_label }}">{{ event_content_form.end_time.label }}</label>
+
+                                <div class="input-append date form_datetime" data-date="">
+                                    <input type="text" class="form-control" name="end_time"
+                                           id="{{ event_content_form.end_time.id_for_label }}"
+                                           placeholder="事件需在该时间前完成"
+                                           value="{% if event_content_form.end_time.value %}{{ event_content_form.end_time.value }}{% endif %}"/>
+                                    <span class="add-on"><i class="icon-remove"></i></span>
+                                    <span class="add-on"><i class="icon-calendar"></i></span>
+                                </div>
+                                <p><div class="text-warning"><small>{{ event_content_form.end_time.errors }}</small></div></p>
+                            </div>
+                            <!--|date:"Y年m月d日 H:i:s"-->
+                        </div>
+                        <!-- /.card-body -->
+                        {% csrf_token %}
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">创建事件</button>
+                        </div>
+                        <!--{{ event_content_form.as_p }}-->
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block js %}
+
+<script type="text/javascript">
+    $(function() {
+        var editor = editormd("content_md", {
+            path : "{% static 'editor.md-master/lib/' %}", // Autoload modules mode, codemirror, marked... dependents libs path
+            // width : "1000px",  //设置宽度
+            placeholder : "请输入事件描述 ...",  // 输入框提示文字
+            height : 320,
+            syncScrolling : "single"
+        });
+
+        /*
+        // or
+        var editor = editormd({
+            id   : "editormd",
+            path : "../lib/"
+        });
+        */
+    });
+</script>
+
+<script type="text/javascript">
+    $(".form_datetime").datetimepicker({
+        //format: "yyyy年mm月dd日 hh:ii:ss",
+        format: "yyyy-mm-dd hh:ii:ss",  // 格式化 必须使用这样的格式，才能提交成功，或者不要这一项
+        language: 'zh-CN',  // 需要中文支持 .zh-CN.js
+        autoclose: true,
+        todayBtn: true,
+        todayHighlight: true,
+        startDate: "2018-05-06 09:00:00",  // 开始日期
+        minuteStep: 10,
+        forceParse: false,  // 否强制解析输入框中的值关闭
+        keyboardNavigation: true,  //方向键改变日期
+    });
+</script>
+{% endblock %}

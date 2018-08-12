@@ -1,0 +1,55 @@
+{% extends 'base-blog.html' %}
+
+{% load static %}
+
+{% load blog_template_tags %}
+
+{% block title %}{{ block.super }} - 博客删除确认{% endblock %}
+
+{% block head %}
+    博客删除确认
+{% endblock %}
+
+{% block breadcrumb %}
+<li>
+    <a href="/">项目主页</a>
+</li>
+<li>
+    <a href="{% url 'blog:blog_list' %}">个人博客</a>
+</li>
+<li>
+    分类：<a href="{% url 'blog:blog_list_with_category' blog_article.category.id %}">{{ blog_article.category.name }}</a>
+</li>
+<li>
+    <a href="{% get_detail_url user blog_article.id %}">{{ blog_article.title }}</a>
+</li>
+<li>
+    <strong>删除</strong>
+</li>
+
+{% endblock %}
+
+
+{% block content %}
+<div class="wrapper wrapper-content animated fadeInRight blog">
+    <div class="row">
+        <div class="col-xs-12 col-md-12">
+            <div class="middle-box text-center animated fadeInDown">
+                <h1>Ahem</h1>
+                <h3 class="font-bold">要删除？</h3>
+
+                <div class="error-desc">
+                    <form method="post">
+                        {% csrf_token %}
+                        <p>点击确认即可删除博客《{{ blog_article.title }}》</p>
+                        <br>
+                        <button type="submit" class="btn btn-warning m-t">确认</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

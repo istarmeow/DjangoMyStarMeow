@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% load action %}
+
+{% block title %}测试多条件筛选{% endblock %}
+
+{% block head %}多条件筛选{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="#">主页</a></li>
+    <li class="breadcrumb-item active">事件列表</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>选择：</h3>
+                            <div>
+                                {% action_all current_url 1 %} :
+                                {% for code in code_list %}
+                                    <!--{{ code }}-->
+                                    {% action current_url code 1 %}
+                                {% endfor %}
+                            </div>
+                            <div>
+                                {% action_all current_url 2 %} :
+                                {% for category in category_list %}
+                                    <!--{{ category }}-->
+                                    {% action current_url category 2 %}
+                                {% endfor %}
+                            </div>
+                            <div>
+                                {% action_all current_url 3 %} :
+                                {% for level in level_list %}
+                                    <!--{{ level }}-->
+                                    {% action current_url level 3 %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="card-body">
+                             <h3>视频：</h3>
+                            {% for course in course_list %}
+                                <a class="item" href="{{ course.video.url }}">
+                                    <img src="/media/{{ course.image }}" width="300px" height="400px">
+                                    <p>《{{ course.title }}》{{ course.summary }}</p>
+                                    <hr>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+{% endblock %}

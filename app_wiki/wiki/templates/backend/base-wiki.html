@@ -1,0 +1,104 @@
+{% extends 'base-all.html' %}
+
+{% load wiki_template_tags %}
+
+{% block title %}{{ block.super }} - WiKi{% endblock %}
+
+{% block logo %}
+<i class="glyphicon glyphicon-list-alt"></i>
+<strong class="font-bold">内容管理系统</strong>
+{% endblock %}
+
+{% block logosm %}WiKi{% endblock %}
+
+{% block menu %}
+<li class="line dk"></li>
+<li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
+    <span class="ng-scope">WiKi</span>
+</li>
+{% url 'wiki:tags' as wiki_tags %}
+<li class="{% if request.path == wiki_tags %}active{% endif %}">
+    <a class="J_menuItem" href="{{ wiki_tags }}">
+        <i class="glyphicon glyphicon-tags"></i>
+        <span class="nav-label">标签管理</span>
+    </a>
+</li>
+{% url 'wiki:wiki_backend' as wiki_backend %}
+{% url 'wiki:wiki_content_backend' title_id as wiki_content_backend %}
+<li class="{% if request.path == wiki_backend or request.path == wiki_content_backend %}active{% endif %}">
+    <a class="J_menuItem" href="{{ wiki_backend }}">
+        <i class="fa fa-list"></i>
+        <span class="nav-label">WiKi管理</span>
+    </a>
+</li>
+<li>
+    <a class="J_menuItem" href="{% url 'wiki:wiki_list_index' %}" target="_blank">
+        <i class="fa fa-eye"></i>
+        <span class="nav-label">WiKi展示</span>
+    </a>
+</li>
+{% url 'wiki:theme_setting' as theme_setting %}
+<li class="{% if request.path == theme_setting %}active{% endif %}">
+    <a href="#"><i class="fa fa-envelope"></i> <span class="nav-label">WiKi设置 </span><span class="fa arrow"></span></a>
+    <ul class="nav nav-second-level">
+        <li class="{% if request.path == theme_setting %}active{% endif %}">
+            <a class="J_menuItem" href="{{ theme_setting }}">主题设置</a>
+        </li>
+    </ul>
+</li>
+{% endblock %}
+
+<!--系统消息-->
+{% block message %}
+<li class="dropdown">
+    <!--动态开始-->
+    <a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
+        <i class="fa fa-envelope"></i> <span class="label label-warning"></span>动态
+    </a>
+    <ul class="dropdown-menu dropdown-messages">
+        {% autoescape off %}
+            {% show_author_log 5 0 %}
+        {% endautoescape %}
+        <li>
+            <div class="text-center link-block">
+                <a class="J_menuItem" href="#">
+                    <i class="fa fa-envelope"></i> <strong> 查看所有动态</strong>
+                </a>
+            </div>
+        </li>
+    </ul>
+    <!--动态结束-->
+</li>
+<li class="dropdown">
+    <!--消息开始-->
+    <a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
+        <i class="fa fa-bell"></i> <span class="label label-primary"></span>消息
+    </a>
+    <ul class="dropdown-menu dropdown-alerts">
+        {% autoescape off %}
+            {% show_comments_log 5 0 %}
+        {% endautoescape %}
+
+        <li>
+            <div class="text-center link-block">
+                <a class="J_menuItem" href="notifications.html">
+                    <strong>查看所有 </strong>
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+        </li>
+    </ul>
+    <!--消息结束-->
+</li>
+{% endblock %}
+
+{% block head %}WiKi管理{% endblock %}
+
+{% block breadcrumb %}
+<li>
+    <a href="/">项目主页</a>
+</li>
+<li>
+    <strong>WiKi管理</strong>
+</li>
+{% endblock %}

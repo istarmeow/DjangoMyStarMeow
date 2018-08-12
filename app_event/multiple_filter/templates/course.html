@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+{% load course_active %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>多条件筛选多对多模型</title>
+</head>
+<body>
+
+<h3>选择：</h3>
+
+<p>
+    编程语言：
+    {% active_all request.path 1 %}
+    {% for code in code_list %}
+        <!--{{ code }}-->
+        {% active request.path code 1 %}
+    {% endfor %}
+</p>
+
+<p>
+    课程分类：
+    {% active_all request.path 2 %}
+    {% for category in category_list %}
+        <!--{{ category }}-->
+        {% active request.path category 2 %}
+    {% endfor %}
+</p>
+
+<p>
+    课程信息：
+    {% active_all request.path 3 %}
+    {% for level in level_list %}
+        <!--{{ level }}-->
+        {% active request.path level 3 %}
+    {% endfor %}
+</p>
+
+<h3>视频：</h3>
+{% for course in course_list %}
+    <a class="item" href="{{ course.video.url }}">
+        <img src="/media/{{ course.image }}" width="300px" height="200px">
+        <p>《{{ course.title }}》{{ course.summary }}</p>
+        <hr>
+    </a>
+{% endfor %}
+
+</body>
+</html>

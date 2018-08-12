@@ -1,0 +1,81 @@
+{% extends 'base-blog.html' %}
+
+{% load blog_template_tags %}
+
+{% load static %}
+
+{% block css %}
+{% endblock %}
+
+{% block title %}{{ block.super }} - 标签管理{% endblock %}
+
+{% block head %}
+    博客标签
+
+{% endblock %}
+
+{% block breadcrumb %}
+<li>
+    <a href="/">项目主页</a>
+</li>
+<li>
+    <a href="{% url 'blog:blog_list' %}">个人博客</a>
+</li>
+<li>
+    <strong>标签管理</strong>
+</li>
+{% endblock %}
+
+
+{% block content %}
+<div class="wrapper wrapper-content  animated fadeInRight blog">
+    <div class="row">
+        <div class="col-sm-8">
+            <div class="ibox float-e-margins">
+                <div class="ibox-content">
+                    {% for tag in tags %}
+                        <i class="fa fa-tag" id="id_tag_{{ tag.id }}">
+                            <a class="btn btn-sm btn-{% random_color_flag %} btn-rounded" href="{% get_tag_url user tag.id %}">
+                                {{ tag.name }}({{ tag.blog_nums }})
+                            </a>
+                            <a title="删除" href="{%  url 'blog:manage_tag' %}?delete={{ tag.id }}" style="display:none;" id="id_tag_del_{{ tag.id }}"><i class="fa fa-times"></i></a>
+                            <div id="id_tmp_{{ tag.id }}" style="display:inline-block;"> &nbsp;&nbsp;&nbsp;</div>  <!-- 为了避免鼠标移动上去显示删除符号，造成自动换行导致不能点击到 -->
+                        </i>
+
+                        <!--是否显示删除按钮js-->
+                        <script>
+                            document.getElementById("id_tag_{{ tag.id }}").onmouseout=function(){//当鼠标滑出
+                                document.getElementById("id_tag_del_{{ tag.id }}").style.display="none";	//改变div的display属性
+                                document.getElementById("id_tmp_{{ tag.id }}").style.display="inline-block";
+                            };
+                            document.getElementById("id_tag_{{ tag.id }}").onmouseover=function(){ //当鼠标经过
+                                document.getElementById("id_tag_del_{{ tag.id }}").style.display="inline-block";
+                                document.getElementById("id_tmp_{{ tag.id }}").style.display="none";
+                            }
+                        </script>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="ibox float-e-margins">
+                <div class="row ibox-content">
+                    <form method="post" action="{%  url 'blog:manage_tag' %}{{ parameter }}">
+                        <div class="form-group">
+                            <label for="id_name">标签名称:</label>
+                            <input type="text" name="name" value="{% if tag_form.name.value %}{{ tag_form.name.value }}{% endif %}" required="" id="id_name" class="form-control">
+                            <p class="text-warning">{{ tag_form.name.errors }}</p>
+                        </div>
+                        {% csrf_token %}
+                        <div class="hr-line-dashed"></div>
+                        <div>
+                            <button class="btn btn-sm btn-{{ button_style }} pull-right m-t-n-xs" type="submit">{{ button_name }}</button>
+                            <label>{{ info }}</label>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

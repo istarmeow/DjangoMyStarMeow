@@ -1,0 +1,21 @@
+<ul class="pagination pagination-sm m-0 float-right">
+    {% if pure_page.has_previous %}
+        <li class="page-item"><a class="page-link" href="?{{ pure_page.previous_page_number.querystring }}">&laquo;</a></li>
+    {% endif %}
+
+    {%  for page in pure_page.pages %}
+        {% if page %}
+            {% ifequal page pure_page.number %}
+                <li class="page-item active"><a class="page-link" href="?{{ page.querystring }}">{{ page }}</a></li>
+            {% else %}
+                <li class="page-item"><a class="page-link" href="?{{ page.querystring }}">{{ page }}</a></li>
+            {% endifequal %}
+        {% else %}
+            <li class="none"><a href="">......</a></li>
+        {% endif %}
+    {% endfor %}
+
+    {% if pure_page.has_next %}
+            <li class="page-item"><a class="page-link" href="?{{ pure_page.next_page_number.querystring }}">&raquo;</a></li>
+    {% endif %}
+</ul>

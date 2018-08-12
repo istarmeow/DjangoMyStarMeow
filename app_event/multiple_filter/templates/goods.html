@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+{% load goods_active %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>多条件筛选</title>
+</head>
+<body>
+{% active_all request.path 1 %}
+{% for first_category in first_category_list %}
+    {% active request.path first_category 1 %}
+{% endfor %}
+<br><br>
+{% active_all request.path 2 %}
+{% for sub_category in sub_category_list %}
+    {% active request.path sub_category 2 %}
+{% endfor %}
+<br><br>
+{% active_all request.path 3 %}
+{% for goods_tag in goods_tag_list %}
+    {% active request.path goods_tag 3 %}
+{% endfor %}
+<br><br>
+{% active_all request.path 4 %}
+{% for status in status_list %}
+    {% active request.path status 4 %}
+{% endfor %}
+<p>
+    {% for goods in goods_list %}
+        <p>
+            【{{ goods.title }}】{{ goods.content }}
+        </p>
+    {% endfor %}
+</p>
+</body>
+</html>

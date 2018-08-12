@@ -1,0 +1,83 @@
+{% extends "base_account.html" %}
+
+{% block title %}登录{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body login-card-body">
+        <p class="login-box-msg">登录</p>
+
+        <form action="{% url 'account:login' %}?next={{ next_url }}" method="post">
+            <div class="form-group has-feedback">
+                <input type="text" name="username" class="form-control" placeholder="用户名/邮箱" value="{% if form.username.value %}{{ form.username.value }}{% endif %}{{ username }}">
+                <span class="fa fa-user form-control-feedback"><small class="text-warning">&nbsp;&nbsp;{{ form.username.errors }}{{ msg_username }}</small></span>
+            </div>
+            <div class="form-group has-feedback">
+                <input type="password" name="password" class="form-control" placeholder="密码">
+                <span class="fa fa-lock form-control-feedback"><small class="text-warning">&nbsp;&nbsp;{{ form.password.errors }}{{ msg_password }}</small></span>
+            </div>
+            <div class="form-group has-feedback">
+                <div class="row">
+                    <div class="col-8">
+                        <input type="text" name="verify" class="form-control" placeholder="验证码">
+                    </div>
+                    <div class="col-4">
+                        <span class="form-control-feedback" title="点击切换验证码" id="id_change_verify" onclick="change_verify()"><img src="{% url 'account:verify_image' 100 36 %}" /></span>
+                    </div>
+                </div>
+                <span class="fa fa-picture-o form-control-feedback"><small class="text-warning">&nbsp;&nbsp;{{ msg_verify }}</small></span>
+            </div>
+
+            <div class="row">
+                <div class="col-8">
+                </div>
+                <div class="col-4">
+                    <button type="submit" class="btn btn-primary btn-block btn-flat">登录</button>
+                </div>
+            </div>
+            <input type="hidden" name="next" value="{{ next }}" />
+            {% csrf_token %}
+        </form>
+
+        <p class="mb-1">
+            <a href="#">忘记密码</a>
+        </p>
+        <p class="mb-0">
+            <a href="#" class="text-center">注册用户</a>
+        </p>
+    </div>
+    <!-- /.login-card-body -->
+</div>
+
+
+<script>
+    function change_verify() {
+        // alert('切换验证码');
+        let url = "{% url 'account:verify_image' 100 36 %}";
+        let xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);  //get请求，请求地址，是否异步
+        xhr.responseType = "blob";
+
+        // 如果是跨域请求，需要用到下面两行代码，具体也不知道怎么用
+        xhr.setRequestHeader("client_type", "DESKTOP_WEB");
+        xhr.setRequestHeader("desktop_web_access_key", _desktop_web_access_key="");
+
+        xhr.onload = function() {
+            if (this.status === 200) {
+                let blob = this.response;
+                // 二进制数据拿到了，那么要把它放在一个 html标签中，并且应该是img标签
+                let img = document.createElement("img");
+                img.onload = function(e) {
+                    window.URL.revokeObjectURL(img.src);
+                };
+                //有问题，将blob直接加载到img中，由于blob太大，会有性能影响，上方函数就是释放
+                img.src = window.URL.createObjectURL(blob);
+                // alert(img);
+                $("#id_change_verify").html(img);
+            }
+        };
+        xhr.send();
+    }
+</script>
+
+{% endblock %}

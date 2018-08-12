@@ -1,0 +1,198 @@
+{% extends 'base_event.html' %}
+
+{% load active %}
+
+{% block title %}事件系统{% endblock %}
+
+{% block head %}事件管理{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="#">主页</a></li>
+    <li class="breadcrumb-item active">事件列表</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">事件列表</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        {% if old_filter %}
+                            <div class="card-body card-comment">
+                                <form role="form" action="{% url 'event:list' %}" method="post">
+                                    <div class="row">
+                                        <div class="col-2">
+                                            <div class="input-group mb-12">
+                                                {% with filter_event_form.user as filter_fields %}
+                                                <div class="input-group-prepend">
+                                                    <label class="input-group-text {% if filter_fields.errors %}bg-danger {% endif %}" for="{{ filter_fields.id_for_label }}">{{ filter_fields.label }}</label>
+                                                </div>
+                                                <select class="form-control col-sm-12" name="user" id="{{ filter_fields.id_for_label }}">
+                                                    <option>{% for select in filter_fields %}{{ select }}{% endfor %}</option>
+                                                </select>
+                                                {% endwith %}
+                                            </div>
+                                        </div>
+                                        <div class="col-2">
+                                            <div class="input-group mb-12">
+                                                {% with filter_event_form.status as filter_fields %}
+                                                <div class="input-group-prepend">
+                                                    <label class="input-group-text {% if filter_fields.errors %}bg-danger{% endif %}" for="{{ filter_fields.id_for_label }}">{{ filter_fields.label }}</label>
+                                                </div>
+                                                <select class="form-control col-sm-12" name="status" id="{{ filter_fields.id_for_label }}">
+                                                    <option>{% for select in filter_fields %}{{ select }}{% endfor %}</option>
+                                                </select>
+                                                {% endwith %}
+                                            </div>
+                                        </div>
+                                        <div class="col-2">
+                                            <div class="input-group mb-12">
+                                                {% with filter_event_form.project as filter_fields %}
+                                                <div class="input-group-prepend">
+                                                    <label class="input-group-text {% if filter_fields.errors %}bg-danger {% endif %}" for="{{ filter_fields.id_for_label }}">{{ filter_fields.label }}</label>
+                                                </div>
+                                                <select class="form-control col-sm-12" name="project" id="{{ filter_fields.id_for_label }}">
+                                                    <option>{% for select in filter_fields %}{{ select }}{% endfor %}</option>
+                                                </select>
+                                                {% endwith %}
+                                            </div>
+                                        </div>
+                                        <div class="col-2">
+                                            <div class="input-group mb-12">
+                                                {% with filter_event_form.category as filter_fields %}
+                                                <div class="input-group-prepend">
+                                                    <label class="input-group-text {% if filter_fields.errors %}bg-danger {% endif %}" for="{{ filter_fields.id_for_label }}">{{ filter_fields.label }}</label>
+                                                </div>
+                                                <select class="form-control col-sm-12" name="category" id="{{ filter_fields.id_for_label }}">
+                                                    <option>{% for select in filter_fields %}{{ select }}{% endfor %}</option>
+                                                </select>
+                                                {% endwith %}
+                                            </div>
+                                        </div>
+                                        <div class="col-2">
+                                            <div class="input-group mb-12">
+                                                {% with filter_event_form.level as filter_fields %}
+                                                <div class="input-group-prepend">
+                                                    <label class="input-group-text {% if filter_fields.errors %}bg-danger {% endif %}" for="{{ filter_fields.id_for_label }}">{{ filter_fields.label }}</label>
+                                                </div>
+                                                <select class="form-control col-sm-12" name="level" id="{{ filter_fields.id_for_label }}">
+                                                    <option>{% for select in filter_fields %}{{ select }}{% endfor %}</option>
+                                                </select>
+                                                {% endwith %}
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">筛选事件</button>
+                                    </div>
+                                    {% csrf_token %}
+                                </form>
+                            </div>
+                        {% else %}
+                            <div class="card-body d-flex p-0">
+                                <h3 class="card-title p-3">用户</h3>
+                                <ul class="nav nav-pills p-2">
+                                    {% active_all request.path 1 %}
+                                    {% for user_item in user_list %}
+                                        {% active request.path user_item 1 %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="card-body d-flex p-0">
+                                <h3 class="card-title p-3">状态</h3>
+                                <ul class="nav nav-pills p-2">
+                                    {% active_all request.path 2 %}
+                                    {% for status_item in status_list %}
+                                        {% active request.path status_item 2 %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="card-body d-flex p-0">
+                                <h3 class="card-title p-3">级别</h3>
+                                <ul class="nav nav-pills p-2">
+                                    {% active_all request.path 3 %}
+                                    {% for level_item in level_list %}
+                                        {% active request.path level_item 3 %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="card-body d-flex p-0">
+                                <h3 class="card-title p-3">分类</h3>
+                                <ul class="nav nav-pills p-2">
+                                    {% active_all request.path 4 %}
+                                    {% for category_item in category_list %}
+                                        {% active request.path category_item 4 %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="card-body d-flex p-0">
+                                <h3 class="card-title p-3">项目</h3>
+                                <ul class="nav nav-pills p-2">
+                                    {% active_all request.path 5 %}
+                                    {% for project_item in project_list %}
+                                        {% active request.path project_item 5 %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <table class="table">
+                                <tr>
+                                    <th>主题</th>
+                                    <th>创建人</th>
+                                    <th>创建时间</th>
+                                    <th>状态</th>
+                                    <th>事件分类</th>
+                                    <th>处理时间</th>
+                                    <th>结束时间</th>
+                                    <th>剩余时间</th>
+                                </tr>
+                                {% for event in events.object_list %}
+                                <tr>
+                                    <td>
+                                        {% if event.level.order_number == 1 %}
+                                            <span class="badge bg-danger">{{ event.level }}</span>
+                                        {% elif event.level.order_number == 2 %}
+                                            <span class="badge bg-warning">{{ event.level }}</span>
+                                        {% elif event.level.order_number == 3 %}
+                                            <span class="badge bg-primary">{{ event.level }}</span>
+                                        {% elif event.level.order_number == 4 %}
+                                            <span class="badge bg-success">{{ event.level }}</span>
+                                        {% elif event.level.order_number == 5 %}
+                                            <span class="badge bg-info">{{ event.level }}</span>
+                                        {% else %}
+                                            <span class="badge btn-secondary">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                                        {% endif %}
+                                        <a href="{% url 'event:process' event.pk %}">{{ event.title }}</a>
+                                    </td>
+                                    <td>{{ event.user }}</td>
+                                    <td>{{ event.created|date:"Y年m月d日 H:i:s" }}</td>
+                                    <td>{{ event.status }}</td>
+                                    <td>{{ event.category }}</td>
+                                    <td>{{ event.start_time|date:"Y年m月d日 H:i:s" }}</td>
+                                    <td>{{ event.end_time|date:"Y年m月d日 H:i:s" }}</td>
+                                    <td>{{ event.time_interval }}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                        <div class="card-footer clearfix">
+                            {% include 'includes/pagination.html' with page=events %}
+                            <br><br>
+                            {% ifequal request.path '/event/' %}
+                            <!--测试分页使用，筛选模型不显示这种分页，因为视图中未定义-->
+                            {% include 'includes/pure_pagination.html' with pure_page=events %}
+                            {% endifequal %}
+                        </div>
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </section>
+{% endblock %}

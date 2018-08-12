@@ -1,0 +1,261 @@
+{% extends 'backend/base-wiki.html' %}
+
+{% load mptt_tags %}
+
+{% load static %}
+
+{% block title %}{{ block.super }} - WiKi管理{% endblock %}
+
+{% block head %}WiKi{% endblock %}
+
+{% block breadcrumb %}
+<li>
+    <a href="/">项目主页</a>
+</li>
+{% if show_content %}
+<li>
+    <a href="{% url 'wiki:wiki_index' %}">WiKi系统</a>
+</li>
+<li>
+    <strong>{{ wiki_title }}</strong>
+</li>
+{% else %}
+<li>
+    <strong>WiKi系统</strong>
+</li>
+{% endif %}
+{% endblock %}
+
+
+{% block content %}
+<div class="row wrapper wrapper-content animated fadeInRight">
+    <div class="col-sm-4">
+        <!--引入标题列表-->
+        {% include 'backend/includes/title-tree.html' %}
+    </div>
+
+    <div class="col-sm-8">
+        {% if show_content %}
+        <div class="ibox">
+            <div class="ibox-title">
+                <h5>WiKi详情</h5>
+            </div>
+            <div class="ibox-content">
+                <!--显示文章标签-->
+                <div class="col-sm-12">
+                    <div class="pull-right">
+                        {% for tag in wiki_content.tags.all %}
+                        <span class="label label-info"><i class="fa fa-tag"> &nbsp;</i>{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <!--文章标题-->
+                <div class="col-sm-12">
+                    <div class="m-b-md">
+                        <a href="{% url 'wiki:wiki_edit' wiki_title.id %}" class="btn btn-primary btn-xs pull-right">编辑</a>
+                        <h1 title="标题使用*开头表示不可删除">{{ wiki_title.name }}</h1>
+                    </div>
+                </div>
+                <!--文章信息-->
+                <div class="row">
+                    <div class="col-sm-5">
+                        <dl class="dl-horizontal">
+                            <dt>作者：</dt>
+                            <dd>{{ wiki_content.created_user }}</dd>
+                            <dt>最近更新：</dt>
+                            <dd>{{ wiki_content.updated_user }}</dd>
+                            <dt>点击数：</dt>
+                            <dd>{{ wiki_content.views }}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-sm-7">
+                        <dl class="dl-horizontal">
+                            <dt>创建于：</dt>
+                            <dd>{{ wiki_content.created_time }}</dd>
+                            <dt>最后更新：</dt>
+                            <dd>{{ wiki_content.updated_time }}</dd>
+                            <dt>管理人员：</dt>
+                            <dd class="project-people">
+                                <a href="" title="{{ wiki_content.created_user.username }} 创建">
+                                    {% if wiki_content.created_user.user_profile.image %}
+                                    <img alt="image" class="img-circle" src="{{ wiki_content.created_user.user_profile.image.url }}">
+                                    {% else %}
+                                    <img alt="image" class="img-circle" src="{% static 'account/default.jpg' %}">
+                                    {% endif %}
+                                </a>
+                                <a href="" title="{{ wiki_content.updated_user.username }} 更新">
+                                    {% if wiki_content.updated_user.user_profile.image %}
+                                    <img alt="image" class="img-circle" src="{{ wiki_content.updated_user.user_profile.image.url }}">
+                                    {% else %}
+                                    <img alt="image" class="img-circle" src="{% static 'account/default.jpg' %}">
+                                    {% endif %}
+                                </a>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!--文章选软markdown-->
+                <p id="id_wiki_content">{{ wiki_content.content }}</p>
+
+                <!--显示用户评论-->
+                {% if show_comment %}
+                <hr>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h2>评论：</h2>
+                        {% recursetree wiki_content.wiki_comments.all %}
+                        <div class="social-feed-box" id="node_content_{{ node.id }}" style="display: block">
+                            <div class="pull-right social-action dropdown">
+                                <button data-toggle="dropdown" class="dropdown-toggle btn-white" aria-expanded="false">
+                                    <i class="fa fa-angle-down"></i>
+                                </button>
+                                <ul class="dropdown-menu m-t-xs">
+                                    <li>
+                                        <a {% if node.is_root_node %} onclick="delCommentConfirmation{{ node.id }}('，及该评论的回复') {% else %} onclick="delCommentConfirmation{{ node.id }}('') {% endif %}">删除</a>
+                                        <script>
+                                            function delCommentConfirmation{{ node.id }} (other) {
+                                                if (!confirm("确认删除评论：\"" + "{{ node.content }}" + "\"" + other + "？")) {
+                                                    window.event.returnValue = false;
+                                                } else {
+                                                    delComment{{ node.id }}();
+                                                    let commentDiv=document.getElementById('node_content_{{ node.id }}');
+                                                    commentDiv.style.display='none';
+                                                }
+                                            }
+
+                                            function delComment{{ node.id }}() {
+                                                // alert(node_id);
+                                                $.ajax({
+                                                    url: "{% url 'wiki:del_comment' %}?comment_id=" + "{{ node.id }}",
+                                                    type: 'GET',
+                                                    dataType: 'json',
+                                                    timeout: 1000,
+                                                    cache: false,
+                                                    // beforeSend: LoadFunction, //加载执行方法
+                                                    // error: erryFunction,  //错误执行方法
+                                                    //success: succFunction //成功执行方法
+                                                });
+
+                                                function succFunction(msg) {
+                                                    alert(msg);
+                                                }
+                                            }
+                                        </script>
+
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="social-avatar">
+                                <a href="" class="pull-left">
+                                    {% if node.created_user.user_profile.image %}
+                                    <img alt="image" src="{{ node.created_user.user_profile.image.url }}">
+                                    {% else %}
+                                    <img alt="image" src="{% static 'account/default.jpg' %}">
+                                    {% endif %}
+                                </a>
+                                <div class="media-body">
+                                    <a href="#">
+                                        {{ node.created_user.username }}
+                                    </a>
+                                    <small class="text-muted">{{ node.created_time }}</small>
+                                </div>
+                            </div>
+                            <div class="social-body">
+                                <p>{{ node.content }}</p>
+                                <!--<div class="btn-group">-->
+                                    <!--<button class="btn btn-white btn-xs"><i class="fa fa-thumbs-up"></i> 赞</button>-->
+                                    <!--<button class="btn btn-white btn-xs"><i class="fa fa-comments"></i> 评论</button>-->
+                                    <!--<button class="btn btn-white btn-xs"><i class="fa fa-share"></i> 分享</button>-->
+                                <!--</div>-->
+                            </div>
+                            <div class="social-footer">
+                                {% for child in node.get_children %}
+                                <div class="social-comment">
+                                    <a href="" class="pull-left">
+                                        {% if child.created_user.user_profile.image %}
+                                        <img alt="image" src="{{ child.created_user.user_profile.image.url }}">
+                                        {% else %}
+                                        <img alt="image" src="{% static 'account/default.jpg' %}">
+                                        {% endif %}
+                                    </a>
+                                    <div class="media-body">
+                                        <a href="#">
+                                            {{ child.created_user.username }}
+                                        </a> 回复
+                                        <a href="#">
+                                            {{ child.get_ancestors.0.created_user.username }}：
+                                        </a>
+                                        {{ child.content }}
+                                        <br>
+                                        <small class="text-muted">{{ child.created_time }}</small>
+                                    </div>
+                                </div>
+                                {% endfor %}
+
+                                <div class="social-comment">
+                                    <a href="" class="pull-left">
+                                        {% if request.user.user_profile.image %}
+                                        <img alt="image" src="{{ request.user.user_profile.image.url }}">
+                                        {% else %}
+                                        <img class="image" src="{% static 'account/default.jpg' %}">
+                                        {% endif %}
+                                    </a>
+                                    <div class="media-body">
+                                        <textarea class="form-control" placeholder="填写评论..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endrecursetree %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="middle-box text-center animated fadeInDown">
+            {% url 'wiki:wiki_backend' as wiki_backend %}
+            {% if request.path == wiki_backend %}
+                <h1>Hey</h1>
+                <h3 class="font-bold">相遇是缘</h3>
+
+                <div class="error-desc">
+                    恭喜已成功返回基地...
+                    <br>您可以点击标题浏览内容
+                </div>
+            {% else %}
+                <h1>Meow</h1>
+                <h3 class="font-bold">此地为空</h3>
+
+                <div class="error-desc">
+                    哦豁，还没写内容哦...
+                    <br>您可以编辑下文章
+                    <br><a href="{% url 'wiki:wiki_edit' title_id %}" class="btn btn-primary m-t">编辑WiKi</a>
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!--引入对标题列表操作功能模态框-->
+{% include 'backend/includes/title-tree-modal.html' %}
+
+<div class="gohome"><a class="animated bounceInUp" href="#gotoTop" title="返回首页"><i class="fa fa-hand-pointer-o"></i></a></div>
+{% endblock %}
+
+{% block js %}
+{% if show_content %}
+    <script type="text/javascript">
+        $(document).ready(() => {
+            var src = $('#id_wiki_content').text();
+            var converter = new showdown.Converter();
+            var html = converter.makeHtml(src);
+            $('#id_wiki_content').html(html);
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+{% endif %}
+
+{% endblock %}

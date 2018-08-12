@@ -1,0 +1,159 @@
+{% load mptt_tags %}
+
+{% load wiki_title_select %}
+
+<div class="card-header">
+    <h3 class="card-title">标题树</h3>
+    <p>
+        <form action="{% url 'wiki:wiki_backend' %}" method="get">
+            <div class="input-group">
+                <input type="text" name="keywords" placeholder="仅支持搜索标题" value="{% if keywords %}{{ keywords }}{% endif %}" class="form-control">
+                <span class="input-group-append">
+                    <button type="submit" class="btn btn-info btn-flat"><i class="fa fa-search"></i></button>
+                </span>
+            </div>
+        </form>
+    </p>
+</div>
+<!-- /.card-header -->
+<div class="card-body">
+    <ul class="list-unstyled">
+        {% recursetree titles %}
+            <li style="overflow: hidden;  white-space: nowrap; text-overflow:ellipsis; padding-left: 0; margin-left:-10px;">
+                <span data-toggle="dropdown" aria-expanded="true"><i class="fa fa-caret-down"></i></span>
+                <!--超出部分隐藏显示省略号-->
+                {% url 'wiki:wiki_content_backend' node.id as wiki_node_url %}
+                <a href="{% url 'wiki:wiki_content_backend' node.id %}" title="{{ node.name }}" {% if wiki_node_url == request.path %}style="color: #0a0a0a" {% endif %}>
+                    {# node.show_name #}
+                    {% ifequal node.name|slice:":1" "*" %}{{ node.name|slice:"1:" }}{% else %}{{ node.name }}{% endifequal %}
+                </a>
+                <!--标题名字不显示最前面的*，以及只显示包括三个省略号的9个字符-->
+
+                <div class="dropdown-menu" role="menu">
+                    <a class="dropdown-item" href="{% url 'wiki:wiki_edit' node.id %}">修改</a>
+                    {% if node.is_root_node %}
+                    <a class="dropdown-item" href="#" onclick="add_title(this, '{{ node.id }}', '{{ node.is_root_node }}', is_add_child=0)" data-toggle="modal" data-target="#addTitleModal">添加根文档</a>
+                    {% endif %}
+                    <a class="dropdown-item" href="#" onclick="add_title(this, '{{ node.id }}', '{{ node.is_root_node }}', is_add_child=1)" data-toggle="modal" data-target="#addTitleModal">添加子文档</a>
+                    {% ifnotequal node.name|slice:"0:1" "*" %}
+                    <!--* 表示不能删除的，当以*开头，则删除功能不显示-->
+                    <a class="dropdown-item" href="{% url 'wiki:del_title' %}?node_id={{ node.id }}" onclick="delete_confirmation()">删除该文档及子文档</a>
+                    {% endifnotequal %}
+
+                    <a class="dropdown-item" onclick="move_title(this, '{{ node.id }}', '{{ node.name }}')" data-toggle="modal" data-target="#moveNodeModal">移动到</a>
+                </div>
+                {% if not node.is_leaf_node %}
+                    <ul>
+                        {{ children }}
+                    </ul>
+                {% endif %}
+            </li>
+        {% endrecursetree %}
+    </ul>
+</div>
+
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="addTitleModal" tabindex="-1" role="dialog" aria-labelledby="addTitleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form class="form-horizontal" action="{% url 'wiki:add_title' %}" method="post">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="addTitleModalLabel">添加标题</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="node_id" id="node_id" >
+                    <input type="hidden" name="is_root_node" id="is_root_node" >
+                    <input type="hidden" name="is_add_child" id="is_add_child">
+                    <div class="form-group">
+                        <div class="col-sm-12">
+                          <input type="text" id="new_title" name="new_title" class="form-control" placeholder="新标题">
+                        </div>
+                    </div>
+                    {% csrf_token %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="submit" class="btn btn-primary">提交更改</button>
+                </div>
+            </form>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="moveNodeModal" tabindex="-1" role="dialog" aria-labelledby="moveNodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="max-width: 600px;">
+        <div class="modal-content">
+            <form class="form-horizontal" action="{% url 'wiki:move_title' %}" method="post">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="moveNodeModalLabel">移动标题</h4>
+                </div>
+                <div class="modal-body">
+                    <input name="current_title" id="id_current_title" value="" hidden />
+                    <div class="row">
+                        <div class="col-lg-9">
+                            <div class="input-group">
+                                <select class="form-control" name="target">
+                                    <option value="0">根目录</option>
+                                    {% autoescape off %}
+                                        {% title_select %}
+                                    {% endautoescape %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="input-group">
+                                <select class="form-control" name="position">
+                                    <option value="first-child">子节点第一</option>
+                                    <option value="last-child">子节点最后</option>
+                                    <option value="left">节点前一位</option>
+                                    <option value="right">节点后一位</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    {% csrf_token %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="submit" class="btn btn-primary">提交更改</button>
+                </div>
+            </form>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
+
+<script>
+    // 添加子文档或者是根文档
+    function add_title(obj, node_id, is_root_node, is_add_child) {
+        $('#node_id').val(node_id);
+        $('#is_root_node').val(is_root_node);
+        $('#is_add_child').val(is_add_child);
+        if (is_add_child) {
+            $('#addTitleModalLabel').html("添加子文档");
+        } else {
+            $('#addTitleModalLabel').html("添加根文档");
+        }
+        // 最后显示出模态框
+        $('#addTitleModal').modal('show');
+    }
+
+    // 删除标题
+    function delete_confirmation() {
+        if (!confirm("确认删除该文档和子文档？")) {
+        window.event.returnValue = false;
+        }
+    }
+
+    // 移动标题到其他目录
+    function move_title(obj, node_id, node_name) {
+        $('#moveNodeModalLabel').html('移动 [' + node_name + '] 到');
+        let current_title = document.getElementById('id_current_title');
+        current_title.value = node_id;
+    }
+</script>

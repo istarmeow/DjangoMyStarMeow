@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--<meta name="renderer" content="webkit">-->
+
+    <title>{% block title %}吾星喵{% endblock %}</title>
+
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+
+    <!--[if lt IE 9]>
+    <meta http-equiv="refresh" content="0;ie.html" />
+    <![endif]-->
+
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}">
+    <link href="{% static 'hAdmin/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'hAdmin/css/font-awesome.min.css' %}" rel="stylesheet">
+    <link href="{% static 'hAdmin/css/animate.css' %}" rel="stylesheet">
+    <link href="{% static 'hAdmin/css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'hAdmin/css/plugins/treeview/bootstrap-treeview.css' %}" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'editor.md-master/css/editormd.min.css' %}" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/tomorrow-night-eighties.min.css">
+
+    {% block css %}{% endblock %}
+    <!--自定义的css-->
+    <link href="{% static 'hAdmin/custom.css' %}" rel="stylesheet">
+</head>
+
+<body class="fixed-sidebar full-height-layout gray-bg" style="overflow:hidden">
+    <div id="wrapper">
+        <!--左侧导航开始-->
+        <nav class="navbar-default navbar-static-side" role="navigation">
+            <div class="nav-close"><i class="fa fa-times-circle"></i>
+            </div>
+            <div class="sidebar-collapse">
+                <ul class="nav" id="side-menu">
+                    <li class="nav-header">
+                        <div class="dropdown profile-element">
+                            <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                                <span class="clear">
+                                    <span class="block m-t-xs" style="font-size:20px;">
+                                        {% block logo %}
+                                        <i class="glyphicon glyphicon-list-alt"></i>
+                                        <strong class="font-bold">吾星喵系统</strong>
+                                        {% endblock %}
+                                    </span>
+                                </span>
+                            </a>
+                        </div>
+                        <div class="logo-element">{% block logosm %}吾星喵{% endblock %}
+                        </div>
+                    </li>
+                    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
+                        <span class="ng-scope">Home</span>
+                    </li>
+                    <li>
+                        <a class="J_menuItem" href="{% url 'index' %}">
+                            <i class="fa fa-home"></i>
+                            <span class="nav-label">项目主页</span>
+                        </a>
+                    </li>
+
+                    {% block menu %}
+                    {% endblock %}
+
+                    <li class="line dk"></li>
+                    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
+                        <span class="ng-scope">Event</span>
+                    </li>
+                     <li>
+                        <a class="J_menuItem" href="{% url 'event:event_filter' 0 0 0 0 0 %}">
+                            <i class="fa fa-th-list"></i>
+                            <span class="nav-label">事件筛选</span>
+                        </a>
+                    </li>
+                    <li class="line dk"></li>
+                    <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
+                        <span class="ng-scope">工具类</span>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fa fa-cutlery"></i> <span class="nav-label">工具 </span><span class="fa arrow"></span></a>
+                        <ul class="nav nav-second-level">
+                            <li><a class="J_menuItem" href="form_builder.html">表单构建器</a>
+                            </li>
+                        </ul>
+                    </li>
+
+                </ul>
+            </div>
+        </nav>
+        <!--左侧导航结束-->
+        <!--右侧部分开始-->
+        <div id="page-wrapper" class="gray-bg dashbard-1">
+            <div class="row border-bottom">
+                <!--顶部横幅开始-->
+                <nav class="navbar navbar-static-top" role="navigation" style="margin-bottom: 0">
+                    <div class="navbar-header"><a class="navbar-minimalize minimalize-styl-2 btn btn-info " href="#"><i class="fa fa-bars"></i> </a>
+                        <form role="search" class="navbar-form-custom" method="post" action="#">
+                            <div class="form-group">
+                                <input type="text" placeholder="请输入您需要查找的内容 …" class="form-control" name="top-search" id="top-search">
+                            </div>
+                        </form>
+                    </div>
+                    <ul class="nav navbar-top-links navbar-right">
+                        <!--系统消息-->
+                        {% block message %}
+                        {% endblock %}
+
+                        <li class="dropdown">
+                            <!--用户开始-->
+                            {% if user.is_authenticated %}
+                                <a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
+                                    <i class="glyphicon glyphicon-user"></i>
+                                    <span class="label label-primary"></span>
+                                    {{ user.username }}
+                                </a>
+                                <ul class="dropdown-menu dropdown-alerts">
+                                    <li class="m-t-xs">
+                                        <div class="dropdown-messages-box">
+                                            <div class="ibox-content text-center">
+                                                <h1>{{ user.username }}</h1>
+                                                <div class="m-b-sm">
+                                                    {% if user.user_profile.image %}
+                                                    <img alt="image" class="img-circle" src="{{ user.user_profile.image.url }}">
+                                                    {% else %}
+                                                    <img alt="image" class="img-circle" src="{% static 'account/default.jpg' %}">
+                                                    {% endif %}
+                                                </div>
+                                                <p class="font-bold">欢迎使用</p>
+
+                                                <div class="text-center">
+                                                    <small class="text-muted">上次登录：{{ user.last_login }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="divider"></li>
+                                    <li>
+                                        <div class="user-button">
+                                            <div class="row">
+                                                <div class="col-sm-6">
+                                                    <button type="button" class="btn btn-primary btn-sm btn-block"><i class="fa fa-envelope"></i> 修改密码</button>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <button type="button" class="btn btn-default btn-sm btn-block"><i class="fa fa-coffee"></i> <a href="{% url 'account:logout'%}" >退出</a></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            {% else %}
+                                <a href="{% url 'account:login'%}" >点击登录</a>
+                            {% endif %}
+                            <!--用户结束-->
+                        </li>
+                    </ul>
+                </nav>
+                <!--顶部横幅结束-->
+
+            </div>
+
+            <div class="row">
+                <!--右侧正文开始-->
+                <div class="gray-bg" id="gotoTop">
+                    <!--右侧中部导航内容开始-->
+                    <div class="row wrapper border-bottom white-bg page-heading">
+                        <div class="col-sm-12">
+                            <h2>{% block head %}标题{% endblock %}</h2>
+                            <ol class="breadcrumb">
+                                {% block breadcrumb %}
+                                <li>
+                                    <a href="index.html">主页</a>
+                                </li>
+                                <li>
+                                    <strong>包屑导航</strong>
+                                </li>
+                                {% endblock %}
+                            </ol>
+                        </div>
+                    </div>
+                    <!--右侧中部导航内容结束-->
+
+                    <!--右侧内容开始-->
+                    {% block content %}
+                    <div class="row wrapper wrapper-content animated fadeInRight">
+                        <div class="col-sm-4">
+                            正文一
+                        </div>
+                        <div class="col-sm-8">
+                            正文二
+                        </div>
+                    </div>
+                    {% endblock %}
+                    <!--右侧内容结束-->
+                </div>
+                <!--右侧正文结束-->
+            </div>
+        </div>
+    </div>
+    <!--右侧部分结束-->
+
+    <!-- 全局js -->
+    <script src="{% static 'hAdmin/js/jquery.min.js' %}"></script>
+    <script src="{% static 'hAdmin/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'hAdmin/js/plugins/metisMenu/jquery.metisMenu.js' %}"></script>
+    <script src="{% static 'hAdmin/js/plugins/slimscroll/jquery.slimscroll.min.js' %}"></script>
+    <script src="{% static 'hAdmin/js/plugins/layer/layer.min.js' %}"></script>
+
+    <!-- 自定义js -->
+    <script src="{% static 'hAdmin/js/hAdmin.js' %}"></script>
+    <!--<script type="text/javascript" src="{% static 'hAdmin/js/index.js' %}"></script>-->
+    <!--<script src="{% static 'hAdmin/js/plugins/treeview/bootstrap-treeview.js' %}"></script>-->
+
+    <!-- 第三方插件 -->
+    <!--<script src="{% static 'hAdmin/js/plugins/pace/pace.min.js' %}"></script>-->
+    <script src="{% static 'editor.md-master/editormd.min.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.8.6/showdown.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+    {% block js %}{% endblock %}
+
+</body>
+
+</html>

@@ -1,0 +1,295 @@
+{% extends 'base_event.html' %}
+{% load staticfiles %}
+{% block title %}事件系统{% endblock %}
+
+{% block head %}事件管理{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="#">主页</a></li>
+<li class="breadcrumb-item"><a href="{% url 'event:list' %}">事件列表</a></li>
+<li class="breadcrumb-item active">{{ event.title }}</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+
+            <div class="col-md-6">
+                <!--左边显示事件的标题和内容-->
+                <!-- Box Comment -->
+                <div class="card card-widget">
+                    <div class="card-header">
+                        <div class="user-block">
+                            <img class="img-circle" src="{% static 'img/user1-128x128.jpg' %}" height="100"
+                                 width="100" alt="User Image">
+                            <span class="username"><a href="#">{{ event.user }}</a></span>
+                            <span class="description">创建时间：{{ event.created|date:"Y年m月d日 H:i:s" }}</span>
+                        </div>
+                        <!-- /.user-block -->
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-widget="collapse"><i
+                                    class="fa fa-minus"></i>
+                            </button>
+                            <button type="button" class="btn btn-tool" data-widget="remove"><i
+                                    class="fa fa-times"></i>
+                            </button>
+                        </div>
+                        <!-- /.card-tools -->
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        {% if event.image %}
+                            <img class="img-fluid pad" src="{{ event.image.url }}" alt="Photo">
+                        {% else %}
+                            <img class="img-fluid pad" src="{% static 'img/事件页默认图片.jpg' %}" alt="Photo">
+                        {% endif %}
+                        <p><h3>主题：【{{ event.title }}】</h3></p>
+                        <hr style="height:1px;border:none;border-top:5px dashed #0066CC;" />
+                        <!--添加Markdown显示-->
+                        <!--<p>{{ event.get_content_as_markdown }}</p>-->
+                        <p id="event_content">{{ event.content }}</p>
+
+                        <!--<button type="button" class="btn btn-default btn-sm"><i class="fa fa-share"></i> Share-->
+                        <!--</button>-->
+                        <!--<button type="button" class="btn btn-default btn-sm"><i class="fa fa-thumbs-o-up"></i> Like-->
+                        <!--</button>-->
+                        <span class="float-right text-muted">
+                            {% if '关闭' in event.time_interval %}
+                                【已关闭！】
+                            {% elif '超时' not in event.time_interval %}
+                                结束时间：{{ event.end_time|date:"Y年m月d日 H:i:s" }}
+                                【距离超时还剩{{ event.time_interval }}】
+                            {% else %}
+                                【已超时！】
+                            {% endif %}
+                        </span>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+            <!-- /.card -->
+
+            <!--右边显示事件的处理过程及事件分析-->
+            <div class="col-md-6">
+                <!-- Box Comment -->
+                <div class="card card-widget">
+                    <!--显示每个用户针对该事件处理次数-->
+                    <div class="card-header">
+                        {% for user in users %}
+                        <button type="button" class="btn btn-success btn-sm"><b>【{{ user.username }}】</b>已处理{{ user.reply_nums }}次</button>
+                        {% endfor %}
+                    </div>
+                    <!--查询到有处理过程就显示所有的处理过程，否则显示开始处理-->
+                    {% if processes %}
+                        <!--显示用户回复为markdown文本-->
+                        <div class="card-body card-comments">
+                            {% for process in processes %}
+                                <div class="card-comment">
+                                    <!-- User image -->
+                                    <img class="img-circle img-sm" src="{% static 'img/user1-128x128.jpg' %}" alt="User Image">
+
+                                    <div class="comment-text">
+                                        <span class="username" {% if process.user == request.user %} style="color: #007bff" {% endif %}>
+                                            {{ process.user.username }}
+                                            <span class="text-muted float-right">{{ process.created|date:"Y年m月d日 H:i:s" }}</span>
+                                        </span><!-- /.username -->
+                                        <!--{{ process.reply }}-->
+                                        <p id="id_reply_{{ process.id }}">{{ process.reply }}</p>
+                                        <!--{{ process.get_reply_as_markdown }}-->
+                                    </div>
+                                    <!-- /.comment-text -->
+                                </div>
+                                <!-- /.card-comment -->
+                            {% endfor %}
+                        </div>
+                        <!-- /.card-footer -->
+
+                        <div class="card-footer">
+                            {% if event.status == 2 %}
+                                <!--当处理状态为处理中时，显示处理回复表单-->
+                                <form action="{% url 'event:start_processing' event.pk %}" method="post" role="form">
+                                    <img class="img-fluid img-circle img-sm" src="{% static 'img/user1-128x128.jpg' %}"
+                                         alt="Alt Text">
+                                    <!-- .img-push is used to add margin to elements next to floating images -->
+                                    <div class="img-push">
+                                        {% if request.user.is_authenticated %}
+                                            <div class="form-group">
+                                                <label>{{ request.user.username }}</label>
+                                                <!--<textarea class="form-control" rows="5" name="reply" placeholder="请输入处理回复 ..."></textarea>-->
+                                                <div id="editormd">
+                                                    <textarea style="display:none;" name="reply" placeholder="请输入处理回复 ..."></textarea>
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">回复</button>
+                                        {% else %}
+                                            <div class="form-group">
+                                                <label>{{ request.user.username }}</label>
+                                                <textarea class="form-control" rows="5" placeholder="登陆后处理回复 ..." disabled></textarea>
+                                            </div>
+                                            <a href="{% url 'account:login' %}?next={{ request.path }}" class="btn btn-primary">登录</a>
+                                        {% endif %}
+                                    </div>
+                                    {% csrf_token %}
+                                </form>
+                            {% endif %}
+                        </div>
+                        <!--如果针对该事件有事件分析则显示，没有不显示-->
+                        <div class="card-footer card-comments">
+                            {% if analysis %}
+                                <b>事件分析</b>
+                                <div class="card-comment">
+                                    <!-- User image -->
+                                    <img class="img-circle img-sm" src="{% static 'img/user1-128x128.jpg' %}" alt="User Image">
+
+                                    <div class="comment-text">
+                                        <span class="username" {% if analysis.user == request.user %} style="color: #007bff" {% endif %}>
+                                            {{ analysis.user.username }}
+                                            <span class="text-muted float-right">{{ analysis.created|date:"Y年m月d日 H:i:s" }}</span>
+                                        </span><!-- /.username -->
+                                        <p class="callout callout-info">{{ analysis.reply }}</p>
+                                    </div>
+                                    <!-- /.comment-text -->
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="card-footer">
+                            <!--事件确认处理完成后，关闭事件-->
+                            {% if event.status == 5 %}
+                                <a href="{% url 'event:event_close' event.pk %}" class="btn btn-warning float-right">关闭事件</a>
+                            {% else %}
+                                <a href="javascript:return false;" onclick="return false;" class="btn btn-default float-right">关闭事件</a>
+                            {% endif %}
+                            <!--事件处理完成后且在确认完成前，可以点击确认完成-->
+                            {% if event.status > 2 and event.status < 5 %}
+                                <a href="{% url 'event:confirm_processed' event.pk %}" class="btn btn-success float-right">确认处理完成</a>
+                            {% else %}
+                                <a href="javascript:return false;" onclick="return false;" class="btn btn-default float-right">确认处理完成</a>
+                            {% endif %}
+                            <!--事件处理完成后且在关闭之前，可以提交事件分析-->
+                            {% if event.status == 2 %}
+
+                            {% else %}
+                                <a href="javascript:return false;" onclick="return false;" class="btn btn-default float-right">提交事件分析</a>
+                            {% endif %}
+                            <!--事件在处理中时显示处理完成按钮-->
+                            {% if event.status == 2 %}
+                                <a href="{% url 'event:processed' event.pk %}" class="btn btn-success float-right">处理完成</a>
+                            {% else %}
+                                <a href="javascript:return false;" onclick="return false;" class="btn btn-default float-right">处理完成</a>
+                            {% endif %}
+                        </div>
+
+                        <!--如果事件已完成，则显示事件分析表单-->
+                        <div class="card-footer">
+                            {% if event.status == 3 %}
+                                <div class="card-comment">
+                                    <form action="{% url 'event:submit_analysis' event.pk %}" method="post">
+                                        <div class="form-group">
+                                            <label>事件分析</label>
+                                            <textarea class="form-control" name="analysis_reply" rows="3" placeholder="请输出事件分析或经验 ···"></textarea>
+                                            {% csrf_token %}
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">提交事件分析</button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="card-header">
+                            <div class="user-block">
+                                <img class="img-circle" src="{% static 'img/user1-128x128.jpg' %}" height="100"
+                                     width="100" alt="User Image">
+                                {% if request.user.is_authenticated %}
+                                    <span class="username"><a href="#">{{ request.user }}</a></span>
+                                    <span class="description">点击开始处理后，你将称为该事件的主处理人</span>
+                                {% else %}
+                                    <span class="username"><a href="#">未登录</a></span>
+                                    <span class="description">登陆后开始处理</span>
+                                {% endif %}
+                            </div>
+                            <!-- /.user-block -->
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-widget="collapse"><i
+                                        class="fa fa-minus"></i>
+                                </button>
+                                <button type="button" class="btn btn-tool" data-widget="remove"><i
+                                        class="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <!-- /.card-tools -->
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-footer">
+                            {% if request.user.is_authenticated %}
+                                <form action="{% url 'event:start_processing' event.pk %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary btn-lg">开始处理</button>
+                                </form>
+                            {% else %}
+                                <a href="{% url 'account:login' %}?next={{ request.path }}" class="btn btn-primary btn-lg">点击登录</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+                <!-- /.card -->
+            </div>
+            <!-- /.card -->
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block js %}
+
+{% if event.status == 2 and request.user.is_authenticated %}
+<!--当处于事件处理中的状态是，加载Markdown编辑器-->
+<script type="text/javascript">
+    $(function() {
+        var editor = editormd("editormd", {
+            path : "{% static 'editor.md-master/lib/' %}", // Autoload modules mode, codemirror, marked... dependents libs path
+            // width : "1000px",  //设置宽度
+            placeholder : "请输入处理回复 ...",  // 输入框提示文字
+            height : 320,
+            syncScrolling : "single"
+        });
+
+        /*
+        // or
+        var editor = editormd({
+            id   : "editormd",
+            path : "../lib/"
+        });
+        */
+    });
+</script>
+{% endif %}
+
+<!--渲染时间正文-->
+<script type="text/javascript">
+    $(document).ready(() => {
+        var src = $('#event_content').text()
+        var converter = new showdown.Converter();
+        var html = converter.makeHtml(src);
+        $('#event_content').html(html);
+        hljs.initHighlightingOnLoad();
+    })
+</script>
+
+<!--渲染时间处理回复-->
+{% if processes %}
+    {% for process in processes %}
+        <script type="text/javascript">
+            $(document).ready(() => {
+                var src = $('#id_reply_{{ process.id }}').text();
+                var converter = new showdown.Converter();
+                var html = converter.makeHtml(src);
+                $('#id_reply_{{ process.id }}').html(html);
+                hljs.initHighlightingOnLoad();
+            })
+        </script>
+    {% endfor %}
+{% endif %}
+{% endblock %}

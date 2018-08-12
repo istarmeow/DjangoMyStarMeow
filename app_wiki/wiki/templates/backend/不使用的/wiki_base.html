@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block logo %}内容管理系统{% endblock %}
+
+{% block menu %}
+<nav class="mt-2">
+    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
+        data-accordion="false">
+        <!-- Add icons to the links using the .nav-icon class
+             with font-awesome or any other icon font library -->
+        <li class="nav-item has-treeview {% if request.path in WIKI_MENU_GROUP %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.path in WIKI_MENU_GROUP %}active{% endif %}">
+                <i class="nav-icon fa fa-table"></i>
+                <p>
+                    WiKi系统
+                    <i class="fa fa-angle-left right"></i>
+                </p>
+            </a>
+
+            <ul class="nav nav-treeview">
+                <li class="nav-item">
+                    {% url 'wiki:tags' as wiki_tags %}
+                    <a href="{{ wiki_tags }}" class="nav-link {% if request.path == wiki_tags %}active{% endif %}">
+                        <i class="fa fa-tags nav-icon"></i>
+                        <p>标签管理</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    {% url 'wiki:wiki_backend' as wiki_backend %}
+                    {% url 'wiki:wiki_content_backend' title_id as wiki_content_backend %}
+                    <a href="{{ wiki_backend }}" class="nav-link {% if request.path == wiki_backend or request.path == wiki_content_backend %}active{% endif %}">
+                        <i class="fa fa-user nav-icon"></i>
+                        <p>WiKi管理</p>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <li class="nav-item has-treeview">
+            <a href="#" class="nav-link">
+                <i class="nav-icon fa fa-tree"></i>
+                <p>
+                    WiKi前端
+                    <i class="fa fa-angle-left right"></i>
+                </p>
+            </a>
+
+            <ul class="nav nav-treeview">
+                <li class="nav-item">
+                    {% url 'wiki:wiki_list_index' as wiki_list %}
+                    <a href="{{ wiki_list }}" class="nav-link {% if request.path == wiki_list %}active{% endif %}" target="_blank">
+                        <i class="fa fa-leaf nav-icon"></i>
+                        <p>WiKi列表</p>
+                    </a>
+                </li>
+            </ul>
+        </li>
+        {% url 'wiki:theme_setting' as theme_setting %}
+        <li class="nav-item has-treeview {% if request.path == theme_setting %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.path == theme_setting %}active{% endif %}">
+                <i class="nav-icon fa fa-cogs"></i>
+                <p>
+                    系统设置
+                    <i class="fa fa-angle-left right"></i>
+                </p>
+            </a>
+
+            <ul class="nav nav-treeview">
+                <li class="nav-item">
+                    <a href="{{ theme_setting }}" class="nav-link {% if request.path == theme_setting %}active{% endif %}">
+                        <i class="fa fa-tint nav-icon"></i>
+                        <p>主题设置</p>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+    </ul>
+</nav>
+{% endblock menu %}

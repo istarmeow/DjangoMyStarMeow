@@ -1,0 +1,166 @@
+{% extends 'backend/wiki_base.html' %}
+
+{% load wiki_tag_color %}
+
+{% block title %}主题管理 | WiKi系统{% endblock %}
+
+{% block head %}主题{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'wiki:wiki_index' %}">主页</a></li>
+    <li class="breadcrumb-item active">编辑主题</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <!--<h5 class="mb-2">主题列表</h5>-->
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card card-primary card-outline">
+                {% for theme in themes %}
+                    <div class="attachment-block clearfix" id="id_theme_div_{{ theme.id }}" style="display: block">
+                        <div class="card-tools" style="float: right">
+                            <button type="button" class="btn btn-tool" title="删除" data-widget="remove" onclick="delete_confirmation('{{ theme.id }}')">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+
+                        <ul class="users-list clearfix">
+                            <li>
+                                {% if theme.body_background %}
+                                    <img title="页面背景：{{ theme.body_background }}" src="{{ theme.body_background.url }}" alt="Attachment Image" style="height: 120px; width: 120px">
+                                {% else %}
+                                    <img style="height: 120px; width: 120px">
+                                {% endif %}
+                            </li>
+                            <li>
+                                {% if theme.content_background %}
+                                    <img title="文本背景：{{ theme.content_background }}" src="{{ theme.content_background.url }}" alt="Attachment Image" style="height: 120px; width: 120px">
+                                {% else %}
+                                    <img style="height: 120px; width: 120px">
+                                {% endif %}
+                            </li>
+                            <li>
+                                <h4 class="attachment-heading" title="主题名称">{{ theme.name }}</h4>
+                                <br>
+                                <div class="attachment-text">
+                                    <div style="background: {{ theme.logo_color }}" title="Logo背景颜色">
+                                        {{ theme.logo_color }}
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card card-primary card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">增加主题</h3>
+                    </div>
+                    <form role="form" action="." method="post" enctype="multipart/form-data">
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="{{ theme_setting_form.name.id_for_label }}">{{ theme_setting_form.name.label }}</label>
+                                <input class="form-control" type="text" name="name" maxlength="50" required=""
+                                       id="{{ theme_setting_form.name.id_for_label }}"
+                                       value="{% if theme_setting_form.name.value %}{{ theme_setting_form.name.value }}{% endif %}"
+                                >
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ theme_setting_form.body_background.id_for_label }}">{{ theme_setting_form.body_background.label }}</label>
+                                <div class="input-group">
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" name="body_background" id="{{ theme_setting_form.body_background.id_for_label }}" onchange="loadFile1(this.files[0])">
+                                        <label class="custom-file-label" id="id_body_background_label" for="{{ theme_setting_form.body_background.id_for_label }}">
+                                            {% if theme_setting_form.body_background.value %}{{ theme_setting_form.body_background.value }}{% else %}选择文件{% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                                <span class="text-warning">{{ theme_setting_form.body_background.errors }}</span>
+                                <!--<input class="form-control" type="file" name="body_background" id="id_body_background">-->
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ theme_setting_form.content_background.id_for_label }}">{{ theme_setting_form.content_background.label }}</label>
+                                <div class="input-group">
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" name="content_background" id="{{ theme_setting_form.content_background.id_for_label }}" onchange="loadFile2(this.files[0])">
+                                        <label class="custom-file-label" id="id_content_background_label" for="{{ theme_setting_form.content_background.id_for_label }}">
+                                            {% if theme_setting_form.content_background.value %}{{ theme_setting_form.content_background.value }}{% else %}选择文件{% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                                <span class="text-warning">{{ theme_setting_form.content_background.errors }}</span>
+                                <!--<input class="form-control" type="file" name="content_background" id="id_content_background">-->
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ theme_setting_form.logo_color.id_for_label }}">{{ theme_setting_form.logo_color.label }}</label><small><a target="_blank" href="http://www.qqai.net/tool/yansedaima/">颜色代码查询</a></small>
+                                <input class="form-control" type="text" name="logo_color" maxlength="50" required=""
+                                       id="{{ theme_setting_form.logo_color.id_for_label }}"
+                                       value="{% if theme_setting_form.logo_color.value %}{{ theme_setting_form.logo_color.value }}{% else %}#E0BD62{% endif %}"
+                                >
+                                <span class="text-warning">{{ theme_setting_form.logo_color.errors }}</span>
+                            </div>
+                            {% csrf_token %}
+
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary" style="float: right">提交</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{% endblock %}
+
+{% block js %}
+<script>
+    //刷新当前页面
+    function refresh(){
+       window.location.reload();
+    }
+
+    //确认删除
+    function delete_confirmation(theme_id) {
+        if (!confirm("确认删除？")) {
+            window.event.returnValue = false;
+        } else {
+            delete_theme(theme_id);
+            document.getElementById("id_theme_div_" + theme_id).style.display = "none";
+        }
+    }
+
+    //显示文件名
+    function loadFile1(file){
+        $("#id_body_background_label").html(file.name);
+    }
+    function loadFile2(file){
+        $("#id_content_background_label").html(file.name);
+    }
+    
+    //删除主题函数
+    function delete_theme(theme_id) {
+        $.ajax({
+            url: "{% url 'wiki:delete_theme' %}?delete_id=" + theme_id,
+            type: 'GET',
+            dataType: 'json',
+            timeout: 1000,
+            cache: false,
+            success: successFunction //成功执行方法
+        });
+        function successFunction(res) {
+            //alert(res.del_msg)
+        }
+    }
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,234 @@
+{% extends 'foreend/wiki_base.html' %}
+
+{% load static %}
+
+<!--加载模板标签，用于tag的随机颜色-->
+{% load wiki_tag_color %}
+
+{% load wiki_template_tags %}
+
+{% block title %}
+    {% if show_home %}
+        {{ block.super }}
+    {% else %}
+        {{ block.super }} | {% remove_title_asterisk current_title.name %}
+    {% endif %}
+{% endblock %}
+
+
+<!--顶端横幅-->
+{% block banner %}
+<!--显示最新的WiKi-->
+<div class="banner-bottom" id="showByTime" style="display: block;">
+    {% for wiki_title in all_wiki_title_order_by_time|slice:":3" %}
+    <div class="col-md-4 banner-left" style="background: rgba(0, 0, 0, .075);">
+        <!--显示超出div部分显示省略号-->
+        <div class="col-xs-10 banner-right1" style="overflow: hidden; white-space: nowrap; text-overflow:ellipsis; padding-left: 0;">
+            <h3 title="{% remove_title_asterisk wiki_title.name %}" >
+                {% remove_title_asterisk wiki_title.name as title_name %}
+                {{ title_name }}
+            </h3>
+        </div>
+        <div class="clearfix"> </div>
+        <p>
+            <a href="{% url 'wiki:wiki_detail' wiki_title.id %}">{{ wiki_title.wiki_content.content|truncatechars:36 }}</a>
+        </p>
+    </div>
+    {% endfor %}
+    <div class="clearfix"></div>
+</div>
+<!--显示点击数最多的3个WiKi-->
+<div class="banner-bottom" id="showByViews" style="display: none">
+    {% for wiki_title in all_wiki_title_order_by_views|slice:":3" %}
+    <div class="col-md-4 banner-left" style="background: rgba(0, 0, 0, .075);">
+        <!--显示超出div部分显示省略号-->
+        <div class="col-xs-10 banner-right1" style="overflow: hidden; white-space: nowrap; text-overflow:ellipsis; padding-left: 0;">
+            <h3 title="{% remove_title_asterisk wiki_title.name %}" >
+                {% remove_title_asterisk wiki_title.name as title_name %}
+                {{ title_name }}
+            </h3>
+        </div>
+        <div class="clearfix"> </div>
+        <p>
+            <a href="{% url 'wiki:wiki_detail' wiki_title.id %}">{{ wiki_title.wiki_content.content|truncatechars:36 }}</a>
+        </p>
+    </div>
+    {% endfor %}
+    <div class="clearfix"></div>
+</div>
+
+<br>
+
+<div class="join" style="float: right">
+    <a onclick="showDivStatus()" id="showDivStatusButton">切换访问最多的WiKi</a>
+</div>
+<br>
+{% endblock %}
+
+
+{% block head %}
+    {% if show_home %}
+        根目录下的所有文章
+    {% else %}
+        【{% remove_title_asterisk current_title.name %}】下的所有文章
+    {% endif %}
+{% endblock %}
+
+
+{% block content %}
+<div class="blog">
+    {% for title in sub_titles %}
+    <div class="blog-grid">
+        <div class="col-xs-4 blog-grid-left">
+            <!--<a href="#"><img src="{% static 'foreend/images/1.jpg' %}" alt=" " class="img-responsive"/></a>-->
+            <a href="{% url 'wiki:wiki_detail' title.id %}">
+                {% if title.wiki_images.count == 0 %}
+                    <img src="{% static 'img/no_image.jpg' %}" alt=" " class="img-responsive"/>
+                {% else %}
+                    <img src="{{ title.wiki_images.first.image.url }}" style="max-height:150px; width: auto;" alt=" " class="img-responsive"/>
+                {% endif %}
+            </a>
+        </div>
+        <div class="col-xs-8 blog-grid-right">
+            <h4>
+                <a href="{% url 'wiki:wiki_detail' title.id %}">{% remove_title_asterisk title.name %}</a>
+                <br>
+                <small class="top-social-icons">
+                    {% for tag in title.wiki_content.tags.all %}
+                        <span class="badge badge-{% random_color %}">{{ tag.name }}</span>
+                    {% endfor %}
+                </small>
+            </h4>
+            <p style="word-wrap:break-word;">  <!-- 超出换行 -->
+                {% if title.wiki_content %}
+                    {{ title.wiki_content.content|truncatewords:15 }}
+                {% else %}
+                    暂无内容
+                {% endif %}
+            </p>
+            <a href="{% url 'wiki:wiki_detail' title.id %}" title="点击查看文章详情"><span class="glyphicon glyphicon-play-circle" aria-hidden="true"></span></a>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <hr>
+    {% endfor %}
+
+    <!--靠右的分页模块-->
+    <div class="pull-right">
+        {% include 'foreend/includes/pagination-wiki.html' with page=sub_titles %}
+    </div>
+</div>
+
+{% endblock %}
+
+
+<!--显示最近事件-->
+{%  block recent %}
+    <!--左边1条动态显示-->
+    <div class="col-xs-3 banner-body-left">
+        <div class="latest-news">
+            <h2>最近事件</h2>
+            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingOne">
+                        <h4 class="panel-title">
+                            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne" class="collapsed">
+                                作者动态
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne" aria-expanded="false" style="height: 0px;">
+                        <div class="panel-body">
+                            {% autoescape off %}
+                                {% show_author_log 1 %}
+                            {% endautoescape %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingTwo">
+                        <h4 class="panel-title">
+                            <a class="" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+                                留言回复
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="collapseTwo" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo" aria-expanded="true" style="">
+                        <div class="panel-body">
+                             {% autoescape off %}
+                                {% show_comments_log 1 %}
+                            {% endautoescape %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!--右边5条动态显示-->
+    <div class="col-xs-9 banner-body-right" data-find="_1">
+        <div class="grid_3 grid_5">
+            <div class="bs-example bs-example-tabs" role="tabpanel" data-example-id="togglable-tabs">
+                <ul id="myTab" class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active"><a href="#home" id="home-tab" role="tab" data-toggle="tab" aria-controls="home" aria-expanded="true">作者动态</a></li>
+                    <li role="presentation" class=""><a href="#profile" role="tab" id="profile-tab" data-toggle="tab" aria-controls="profile" aria-expanded="false">留言回复</a></li>
+                    <li role="presentation" class="dropdown">
+                        <a href="#" id="myTabDrop1" class="dropdown-toggle" data-toggle="dropdown" aria-controls="myTabDrop1-contents">其他功能 <span class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu" aria-labelledby="myTabDrop1" id="myTabDrop1-contents">
+                            <li><a href="#dropdown1" tabindex="-1" role="tab" id="dropdown1-tab" data-toggle="tab" aria-controls="dropdown1">@fat</a></li>
+                            <li><a href="#dropdown2" tabindex="-1" role="tab" id="dropdown2-tab" data-toggle="tab" aria-controls="dropdown2">@mdo</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <div id="myTabContent" class="tab-content">
+                    <div role="tabpanel" class="tab-pane fade active in" id="home" aria-labelledby="home-tab">
+                        {% autoescape off %}
+                            {% show_author_log 5 %}
+                        {% endautoescape %}
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade" id="profile" aria-labelledby="profile-tab">
+                        {% autoescape off %}
+                            {% show_comments_log 5 %}
+                        {% endautoescape %}
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade" id="dropdown1" aria-labelledby="dropdown1-tab">
+                        <p>Etsy mixtape wayfarers, ethical wes anderson tofu before they sold out mcsweeney's organic lomo retro fanny pack lo-fi farm-to-table readymade. Messenger bag gentrify pitchfork tattooed craft beer, iphone skateboard locavore carles etsy salvia banksy hoodie helvetica. DIY synth PBR banksy irony. Leggings gentrify squid 8-bit cred pitchfork. Williamsburg banh mi whatever gluten-free, carles pitchfork biodiesel fixie etsy retro mlkshk vice blog. Scenester cred you probably haven't heard of them, vinyl craft beer blog stumptown. Pitchfork sustainable tofu synth chambray yr.</p>
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade" id="dropdown2" aria-labelledby="dropdown2-tab">
+                        <p>Trust fund seitan letterpress, keytar raw denim keffiyeh etsy art party before they sold out master cleanse gluten-free squid scenester freegan cosby sweater. Fanny pack portland seitan DIY, art party locavore wolf cliche high life echo park Austin. Cred vinyl keffiyeh DIY salvia PBR, banh mi before they sold out farm-to-table VHS viral locavore cosby sweater. Lomo wolf viral, mustache readymade thundercats keffiyeh craft beer marfa ethical. Wolf salvia freegan, sartorial keffiyeh echo park vegan.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="clearfix"> </div>
+        </div>
+    </div>
+    <div class="clearfix"> </div>
+{% endblock recent %}
+
+
+
+{% block js %}
+
+<script type="text/javascript">
+    function showDivStatus(){
+        //获取要显示的div对象
+        var divStatusByTime = document.getElementById('showByTime');
+        var divStatusByViews = document.getElementById('showByViews');
+        //显示
+        // alert(divStatusByTime.style.display);
+        if (divStatusByViews.style.display === 'none') {
+            divStatusByTime.style.display = "none";
+            divStatusByViews.style.display = "block";
+            document.getElementById('showDivStatusButton').textContent = '切换最近更新的WiKi';
+        } else {
+            divStatusByTime.style.display = "block";
+            divStatusByViews.style.display = "none";
+            document.getElementById('showDivStatusButton').textContent = '切换访问最多的WiKi';
+        }
+
+    }
+</script>
+
+{% endblock %}

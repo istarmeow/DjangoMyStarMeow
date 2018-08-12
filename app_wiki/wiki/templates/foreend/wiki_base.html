@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+{% load static %}
+
+<!--使用自定义模版标签，用于去掉最前面的*-->
+{% load wiki_template_tags %}
+
+<!--加载点击数应用-->
+{% load hitcount_tags %}
+
+<html>
+<head>
+    <title>{% block title %}WiKi{% endblock %}</title>
+    <!-- for-mobile-apps -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="keywords" content="Great Taste Responsive web template, Bootstrap Web Templates, Flat Web Templates, Android Compatible web template,
+Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, SonyEricsson, Motorola web design"/>
+    <script type="application/x-javascript"> addEventListener("load", function () {
+        setTimeout(hideURLbar, 0);
+    }, false);
+
+    function hideURLbar() {
+        window.scrollTo(0, 1);
+    } </script>
+    <!-- //for-mobile-apps -->
+    <link href="{% static 'WiKiFront/css/bootstrap.css' %}" rel="stylesheet" type="text/css" media="all"/>
+    <link href="{% static 'WiKiFront/css/style.css' %}" rel="stylesheet" type="text/css" media="all"/>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,600,600italic,700,700italic,800,800italic'
+          rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Great+Vibes' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Comfortaa:400,300,700' rel='stylesheet' type='text/css'>
+    <!-- 需要引入jquery-ui，否则报错：(index):622 Uncaught TypeError: $(...).autocomplete is not a function -->
+    <link rel="stylesheet" href="{% static 'jquery-ui-1.11.4/jquery-ui.min.css' %}">
+    <link href="{% static 'WiKiFront/my.css' %}" rel="stylesheet" type="text/css" media="all"/>
+    {% block css %}{% endblock %}
+</head>
+
+<body>
+
+<!-- banner-body -->
+{% with user_theme=request.user.user_profile.theme %}
+<div class="banner-body" id="id_body_background" style="background: url('{% if user_theme.body_background %}{{ user_theme.body_background.url }}{% else %}{% static "foreend/images/banner.png" %}{% endif %}')0px 0px;">
+    <div class="container">
+        <div class="banner-body-content" id="id_content_background" style="background: url('{% if user_theme.content_background %}{{ user_theme.content_background.url }}{% else %}{% static "foreend/images/banner.png" %}{% endif %}')0px 0px;">
+            <div class="col-xs-3 banner-body-left">
+                <div class="logo" id="id_logo_background" style="background: {{ user_theme.logo_color }};">
+                    <h1><a title="点击显示WiKi大纲" data-toggle="modal" data-target="#titleListModal">Great <span>Feel</span></a></h1>
+                </div>
+                <br>
+                <!--全局搜索框-->
+                <div class="col-lg-12 in-gp-tb">
+                    <form action="{% if show_home %} {% url 'wiki:wiki_list_index' %}{% else %}{% url 'wiki:wiki_list' current_title.id %}{% endif %}" method="GET" autocomplete="on">
+                        <div class="input-group" title="在主页下搜索则搜索所有文集，在某个分类下则搜索该分类的文集">
+                            <input type="text" name="keywords" id="id_keywords" value="{{ keywords }}" class="form-control" placeholder="全局搜索" style="background: rgba(0, 0, 0, .075);">
+                            <input type="text" name="page" placeholder="分页标记" value="{{ page }}" hidden />
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="submit" style="background: rgba(0, 0, 0, .075);">Go!</button>
+                            </span>
+                        </div><!-- /input-group -->
+                    </form>
+                </div>
+
+                <div class="top-nav">
+                    <nav class="navbar navbar-default">
+                        <!-- Brand and toggle get grouped for better mobile display -->
+                        <div class="navbar-header">
+                            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                                    data-target="#bs-example-navbar-collapse-1">
+                                <span class="sr-only">Toggle navigation</span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                            </button>
+                        </div>
+
+                        <!-- 左边的分类菜单 -->
+                        <div class="collapse navbar-collapse nav-wil" id="bs-example-navbar-collapse-1">
+                            <nav class="stroke">
+                                <ul class="nav navbar-nav">
+                                    <li><a href="{% url 'wiki:wiki_list_index' %}" class="hvr-underline-from-left"><i class="home1"></i>主页(共{{ all_wiki_title.count }}文)</a></li>
+                                    <!--显示该分类下的子类-->
+                                    {% if current_title %}
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <h4 class="panel-title">
+                                                <span class="glyphicon glyphicon-share-alt"></span>&ensp;&ensp;{% remove_title_asterisk current_title.name %}
+                                            </h4>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    {% for title in sub_titles %}
+                                    <li>
+                                        {% if not title.is_leaf_node %}
+                                            <!--如果是叶节点，则不再显示目录链接-->
+                                            <a href="{% url 'wiki:wiki_list' title.id %}" class="hvr-underline-from-left" title="{{ title.name }}">
+                                                <i class="text-size1"></i>
+                                                <!--显示该分类下的子类个数-->
+                                                {% ifequal title.name|slice:":1" "*" %}{{ title.name|slice:"1:" }}{% else %}{{ title.name }}{% endifequal %}<span class="badge badge-primary">{{ title.get_children.count }}</span>
+                                            </a>
+                                        {% endif %}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </nav>
+                        </div>
+                        <!-- /.navbar-collapse -->
+                    </nav>
+                </div>
+            </div>
+
+            <div class="col-xs-9 banner-body-right">
+                <!--显示顶端的横幅-->
+                {% block banner %}{% endblock %}
+
+                <!--WiKi导航展示-->
+                <div class="gallery-head">
+                    <h5>{% block head %}WiKi{% endblock %}</h5>
+                    <p>
+                        学会忘记痛苦，为阳光记忆腾出空间。<br><br>
+
+                        <ol class="breadcrumb" style="background: rgba(0, 0, 0, .075);">
+                            <li><a href="{% url 'wiki:wiki_list_index' %}">主页</a></li>
+                            <!--遍历显示父节点-->
+                            {% for ancestor in current_title.get_ancestors %}
+                            <li class="active">
+                                <a href="{% url 'wiki:wiki_list' ancestor.id %}">
+                                    {% remove_title_asterisk ancestor.name %}
+                                </a>
+                            </li>
+                            {% endfor %}
+                            <li>
+                                {% remove_title_asterisk current_title.name %}
+                                {% if not show_home %}
+                                <a href="{% url 'wiki:wiki_detail' current_title.id %}">(点击显示当前文章)</a>
+                                {% endif %}
+                            </li>
+                        </ol>
+                    </p>
+                </div>
+
+                {% block content %}{% endblock %}
+
+            </div>
+            <div class="clearfix"></div>
+
+            {%  block recent %}{% endblock recent %}  <!-- 显示最近事件 -->
+
+            <div class="footer">
+                <div class="footer-left">
+                    <ul>
+                        <li>当前用户：{% if request.user.is_authenticated %}{{ request.user.username }}<a href="{% url 'account:logout' %}?next={{ request.path }}">&nbsp;&nbsp;&nbsp;&nbsp;[ 退出登录 ]</a>{% else %}未登陆<a href="{% url 'account:login' %}?next={{ request.path }}">&nbsp;&nbsp;&nbsp;&nbsp;[点击登录]</a>{% endif %}|</li>
+                        <li><a href="#">联系我</a>|</li>
+                        <li>
+                            <a href="#">主题：</a>
+                            <small class="top-social-icons">
+                                {% autoescape off %}
+                                    {% change_theme %}
+                                {% endautoescape %}
+                            </small>
+                            <span id="id_save_theme_info"></span>
+                        </li>
+                    </ul>
+                    <p>小站已累计访问<b>{% wiki_content_all_views %}</b>次{{ hitcount.total_hits }}</p>
+                    <p>Copyright &copy; 2018.LR All rights reserved</p>
+                </div>
+                <div class="footer-right">
+                    <ul class="social-nav model-3">
+                        <li><a href="#" class="icon icon-border facebook"></a></li>
+                        <li><a href="#" class="icon icon-border twitter"></a></li>
+                        <li><a href="#" class="icon icon-border googleplus"></a></li>
+                        <li><a href="#" class="icon icon-border github"></a></li>
+                        <li><a href="#" class="icon icon-border rss"></a></li>
+                    </ul>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="titleListModal" tabindex="-1" role="dialog" aria-labelledby="titleListModalLabel" aria-hidden="true">
+	<div class="modal-dialog" style="padding-top: 50px;">
+		<div class="modal-content" id="id_modal_background" style="height:800px;background: url('{% if user_theme.content_background %}{{ user_theme.content_background.url }}{% else %}{% static "foreend/images/banner.png" %}{% endif %}')0px 0px;">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+					&times;
+				</button>
+				<h4 class="modal-title" id="myModalLabel">
+					WiKi大纲
+				</h4>
+			</div>
+			<div class="modal-body" style="width:auto;height:680px;line-height:auto;overflow:auto;overflow-x:hidden;">
+                {% autoescape off %}
+                    {% title_list_view 1 'list' %}  <!-- 模板标签，表示前端已链接列表形式展示 -->
+                {% endautoescape %}
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">关闭
+				</button>
+				<!--<button type="button" class="btn btn-primary">-->
+					<!--提交更改-->
+				<!--</button>-->
+			</div>
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal -->
+</div>
+
+{% endwith %}  <!-- user_theme=request.user.user_profile.theme -->
+
+
+<script src="{% static 'WiKiFront/js/jquery-1.11.1.min.js' %}"></script>
+<script src="{% static 'WiKiFront/js/bootstrap.js' %}"></script>
+<script src="{% static 'hitcount/hitcount-jquery.js' %}"></script> <!-- 点击数的模块，没有写 -->
+<!-- 需要引入jquery-ui，否则报错：(index):622 Uncaught TypeError: $(...).autocomplete is not a function -->
+<script src="{% static 'jquery-ui-1.11.4/jquery-ui.min.js' %}"></script>
+
+<script>
+    function change_theme(theme_id) {
+        $.ajax({
+            url: "{% url 'wiki:change_theme' %}?theme_id=" + theme_id,
+            type: 'GET',
+            dataType: 'json',
+            timeout: 1000,
+            cache: false,
+            error: errorFunc,
+            success: successFunc,
+        });
+        function errorFunc() {
+            alert('获取错误！');
+        }
+        function successFunc(theme_to_json) {
+            let theme_to_eval = eval(theme_to_json);
+            //alert(theme_to_eval[0].fields.body_background);
+            let body_background = theme_to_eval[0].fields.body_background;
+            let content_background = theme_to_eval[0].fields.content_background;
+            let logo_color = theme_to_eval[0].fields.logo_color;
+            let media_url = "{{ MEDIA_URL }}";
+            //alert(document.getElementById('id_body_background').style.background);
+            //alert(media_url);
+            //alert("url('" + media_url + content_background  + "')0px 0px");
+            // background: url('/media/theme/content/背景_木纹1.png')0px 0px;
+            document.getElementById('id_body_background').style.background = "url('" + media_url + body_background  + "')0px 0px";
+            document.getElementById('id_content_background').style.background = "url('" + media_url + content_background  + "') 0px 0px";
+            document.getElementById('id_logo_background').style.background = logo_color;
+            document.getElementById('id_modal_background').style.background = "url('" + media_url + content_background  + "') 0px 0px";
+            {% if request.user.is_authenticated %}
+                submit_change_theme(theme_id);
+            {% else %}
+                alert('登陆后可保存主题');
+            {% endif %}
+        }
+    }
+
+    function submit_change_theme(theme_id) {
+        //alert('保存主题');
+        $.ajax({
+            type: "POST",      //data 传送数据类型。post 传递
+            dataType: 'json',  // 返回数据的数据类型json
+            url: "{% url 'wiki:change_theme' %}",
+            cache: false,
+            data: {
+                theme_id: theme_id,
+                csrfmiddlewaretoken: '{{ csrf_token }}', //ajax处理Django的csrf
+            },  //传送的数据
+            error: errorFunc,
+            success: successFunc,
+            //complete: completeFunc,
+        });
+
+        function errorFunc(msg){
+            alert('提交失败，状态码：'+ msg.status);
+        }
+        function successFunc(msg) {
+            $('#id_save_theme_info').html(msg.submit_info);
+            //alert(msg.submit_info);
+        }
+    }
+
+
+    $(function() {
+        $("#id_keywords").autocomplete({
+            // source: availableTags  //availableTags=['a', 'b', 'c']
+            source: function (request, response) {
+                $.ajax({
+                    url: "{% url 'wiki:history_search' %}",
+                    dataType: 'text',
+                    data: {
+                        keywords: request.term
+                    },
+                    success: function (data) {
+                        console.log(JSON.parse(data));
+                        // response(availableTags);
+                        response(JSON.parse(data));  //json转换为数组显示
+                    }
+                })
+            },
+        });
+    });
+    
+    let keywords_input = document.getElementById('id_keywords');
+    keywords_input.ondblclick = function () {
+        // alert('双击清除记录啦！');
+        $.ajax({
+            url: "{% url 'wiki:history_search_delete' %}",
+            type: 'get',
+            dataType: 'text',
+            success: function (data) {
+                if (data.search("403") !== -1) {
+                    alert('清除历史需要管理员权限！');
+                } else if (data === 'success') {
+                    alert('成功清除历史搜索！');
+                }
+            }
+        })
+    }
+
+</script>
+
+
+{% block js %}
+{% endblock %}
+</body>
+</html>

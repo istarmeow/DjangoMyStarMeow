@@ -1,0 +1,30 @@
+{% extends 'base-all.html' %}
+
+{% block title %}{{ block.super }} - {{ msg }}{% endblock %}
+
+{% block logo %}
+<i class="glyphicon glyphicon-list-alt"></i>
+<strong class="font-bold">吾星喵系统</strong>
+{% endblock %}
+
+{% block logosm %}吾星喵{% endblock %}
+
+{% block head %}{{ msg }}{% endblock %}
+
+{% block breadcrumb %}
+
+{% endblock %}
+
+
+{% block content %}
+    <div class="middle-box text-center animated fadeInDown">
+        <h1>{{ error_code }}</h1>
+        <h3 class="font-bold">Oops! 无权访问</h3>
+
+        <div class="error-desc">
+            该页面需要超级管理员权限可登录...
+            <br/>您可以返回导航看看
+            <br/><a href="{% url 'index' %}" class="btn btn-primary m-t">返回导航</a>
+        </div>
+    </div>
+{% endblock %}

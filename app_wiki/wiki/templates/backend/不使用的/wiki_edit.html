@@ -1,0 +1,260 @@
+{% extends 'backend/wiki_base.html' %}
+
+{% load wiki_tag_color %}
+
+{% load static %}
+
+{% block title %}WiKi管理 | WiKi系统{% endblock %}
+
+{% block head %}WiKi{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'wiki:wiki_index' %}">主页</a></li>
+    <li class="breadcrumb-item active">WiKi 管理</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card card-primary card-outline">
+                   {% include 'backend/includes/title_tree.html' %}
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="card card-primary card-outline">
+                    <form role="form" action="." method="post" enctype="multipart/form-data">
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>WiKi标题</label>
+                                <input type="text" class="form-control"
+                                       name="title_new"
+                                       placeholder="输入WiKi标题"
+                                       value="{{ wiki_title.name }}"
+                                >
+                                <p><div class="text-warning"><small></small></div></p>
+                            </div>
+                            <div class="form-group">
+                                <label>标签</label>
+                                <select name="tags" class="form-control select2 select2-hidden-accessible" multiple="" data-placeholder="可选择多个标签" style="width: 100%;" tabindex="-1" aria-hidden="true">
+                                    {% for tag in tags %}
+                                    <option {% if tag in wiki_content.tags.all %}selected{% endif %} value="{{ tag.id }}">{{ tag.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>推荐星级</label>
+                                <select class="form-control" name="recommend">
+                                    {% for star in star_list %}
+                                    <option value="{{ star.num }}" {% if wiki_content.recommend == star.num %} selected {% endif %}>{{ star.mean }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>作者寄语</label>
+                                <input type="text" class="form-control"
+                                       name="author_message" id="id_author_message"
+                                       value="{% if wiki_content.author_message %}{{ wiki_content.author_message }}{% endif %}"
+                                >
+                                <p><div class="text-warning"><small></small></div></p>
+                            </div>
+                            <div class="form-group">
+                                <label>粘贴截图转换</label>
+                                <span class="badge badge-info right" id="id_test_insert">测试追加文字</span>
+                                <span class="badge badge-warning right" id="id_empty_result">清空转换结果</span>
+                                <span class="badge badge-success right" id="id_copy_result">复制转换结果</span>
+                                <p class="text-success" id="id_copy_status" style="font-size: xx-small"></p>
+                                <input type="text" class="form-control" title="双击复制"
+                                       name="paste_image" id="id_paste_image" readonly
+                                       placeholder="粘贴图片到本输入框区域，将返回的内容复制到下方WiKi正文中(可双击复制)"
+                                >
+                                <p><div class="text-warning"><small></small></div></p>
+                            </div>
+                            <div class="form-group">
+                                <label>WiKi正文</label>
+                                <div id="wiki_edit_content_md">
+                                    <!--添加Markdown编辑器-->
+                                    <textarea name="content" id="wiki_content_textarea" class="editormd-markdown-textarea"
+                                              placeholder="输入WiKi内容">{{ wiki_content.content }}</textarea>
+                                </div>
+                                <p><div class="text-warning"><small></small></div></p>
+                            </div>
+                            {% csrf_token %}
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-primary">提交编辑</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!--<div class="col-md-3">-->
+                <!--<div class="card">-->
+                    <!--<div class="card-header">-->
+                        <!--<h3 class="card-title">回复</h3>-->
+                    <!--</div>-->
+                    <!--&lt;!&ndash; /.card-header &ndash;&gt;-->
+                    <!--<div class="card-body">-->
+                        <!--回复-->
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block js %}
+
+<script type="text/javascript">
+    $(function() {
+        let editor = editormd("wiki_edit_content_md", {
+            path: "{% static 'editor.md-master/lib/' %}", // Autoload modules mode, codemirror, marked... dependents libs path
+            // width : "1000px",  //设置宽度
+            placeholder: "请输入WiKi内容 ...",  // 输入框提示文字
+            height: 600,
+            syncScrolling: "single",
+            saveHTMLToTextarea : true,  //注意:这个配置，方便post提交表单,关乎后端是否可以获取到值
+            watch : false,
+            tocm: true, // Using [TOCM]
+
+            //  imageUpload参数在console/markdown_editor/plugins/image-dialog/image-dialog.js文件中进行if判断
+            //  利用其传参特性将csrf_token传入image-dialog.js文件进行form表单生成
+            imageUpload: "true",
+            imageFormats: ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+            imageUploadURL: "{% url 'wiki:upload_image' %}?wiki_title_id={{ title_id }}",
+            imageCsrfToken: "{% csrf_token %}",
+
+            /*
+             {
+                success   : 0 | 1,   // 0 表示上传失败，1 表示上传成功
+                message   : "提示的信息，上传成功或上传失败及错误信息等。",
+                url       : "远程图片地址"    //上传成功时才返回，就是图片的访问地址
+             }
+             */
+
+        });
+        /*
+        // or
+        var editor = editormd({
+            id   : "editormd",
+            path : "../lib/"
+        });
+        */
+    });
+</script>
+
+<script>
+    $(function () {
+        //Initialize Select2 Elements 初始化多选元素
+        $('.select2').select2();
+  })
+</script>
+
+<!--粘贴图片-->
+<!--引入js  https://github.com/layerssss/paste.js-->
+<script type="text/javascript" src="{% static 'paste.js-master/paste.js' %}"></script>
+<script type="text/javascript">
+    // 在光标处插入字符串；myField：文本框对象；myValue：要插入的值
+    function insertAtCursor(myField, myValue) {
+        document.getElementById('id_copy_status').textContent = "";  //每次向输入框值粘贴时，清空复制状态提示
+        if (document.selection) {
+            //IE support
+            myField.focus();
+            sel = document.selection.createRange();
+            sel.text = myValue;
+            sel.select();
+        } else if (myField.selectionStart || myField.selectionStart === '0') {
+            //MOZILLA/NETSCAPE support
+            let startPos = myField.selectionStart;
+            let endPos = myField.selectionEnd;
+            let beforeValue = myField.value.substring(0, startPos);
+            let afterValue = myField.value.substring(endPos, myField.value.length);
+
+            myField.value = beforeValue + myValue + afterValue;
+
+            myField.selectionStart = startPos + myValue.length;
+            myField.selectionEnd = startPos + myValue.length;
+            myField.focus();
+        } else {
+            myField.value += myValue;
+            myField.focus();
+        }
+    }
+
+    let paste_image_input = document.getElementById('id_paste_image');  //获取粘贴图片区域元素
+    // 测试监听点击操作追加文字
+    document.getElementById('id_test_insert').onclick = function () {
+        insertAtCursor(paste_image_input, this.innerHTML);
+    };
+    //点击按钮清空输入框的值
+    document.getElementById('id_empty_result').onclick = function () {
+        paste_image_input.value='';
+        document.getElementById('id_copy_status').textContent = "";  //清空复制状态提示
+    };
+    //点击按钮复制输入框的值
+    document.getElementById('id_copy_result').onclick = function () {
+        paste_image_input.select();  //选择复制对象
+        document.execCommand('Copy'); //执行浏览器复制命令
+        document.getElementById('id_copy_status').textContent = '已复制好，可以通过ctrl+v粘贴到下方WiKi正文中';
+    };
+    //双击输入框复制里面的内容
+    paste_image_input.ondblclick = function () {
+        paste_image_input.select();  //选择复制对象
+        document.execCommand('Copy'); //执行浏览器复制命令
+        document.getElementById('id_copy_status').textContent = '已复制好，可以通过ctrl+v粘贴到下方WiKi正文中';
+    };
+
+    //使用Ajax上传base64格式的图片到后端
+    function uploadImageAjax(base64data) {
+        $.ajax({
+            url: "{% url 'wiki:upload_paste_image' %}?title_id={{ title_id }}",
+            type: 'post',
+            data: {
+                base64data: base64data,
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+            },
+            dataType: 'html',
+            success: function (data, status) {//操作成功后的操作！data是后台传过来的值
+                if (status === "success") {
+                    console.log(data);
+                    //向输入框中添加值
+                    insertAtCursor(paste_image_input, data);
+                }
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                alert("发生了错误，我也不知道为什么~");
+            }
+        });
+    }
+    // 监听document.getElementById('id_paste_image')粘贴事件，将图片上传到后端
+    paste_image_input.addEventListener('paste', function (e) {
+        if ( !(e.clipboardData && e.clipboardData.items) ) {
+            return;
+        }
+        for (let i = 0, len = e.clipboardData.items.length; i < len; i++) {
+            let item = e.clipboardData.items[i];
+
+            if (item.kind === "string") {
+                item.getAsString(function (str) {
+                    console.log(str);
+                })
+            } else if (item.kind === "file") {
+                let blob= item.getAsFile();
+                console.log(blob);
+                //转成base64编码，获取一个图片
+                let reader = new window.FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = function () {
+                    let base64data = reader.result;
+                    //ajax上传base64到后台解析
+                    uploadImageAjax(base64data);
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

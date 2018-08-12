@@ -1,0 +1,74 @@
+{% extends 'base-all.html' %}
+
+{% block title %}{{ block.super }} - 项目主页{% endblock %}
+
+{% block logo %}
+<i class="glyphicon glyphicon-list-alt"></i>
+<strong class="font-bold">吾星喵系统</strong>
+{% endblock %}
+
+{% block logosm %}吾星喵{% endblock %}
+
+{% block head %}项目主页{% endblock %}
+
+{% block breadcrumb %}
+
+{% endblock %}
+
+
+{% block content %}
+    <div class="wrapper wrapper-content animated fadeInRight">
+        <div class="row">
+            <div class="col-sm-3">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <h5>事件的创建、处理、结束、分析和关闭</h5>
+                        <h1 class="no-margins">Event</h1>
+                        <div class="stat-percent font-bold text-navy"><a href="{% url 'event:list' %}">点击访问 <i class="fa fa-arrow-circle-right"></i></a></div>
+                        <small>事件管理系统</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-3">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <h5>文章后台管理、子文集创建、修改和删除</h5>
+                        <h1 class="no-margins">WiKi</h1>
+                        <div class="stat-percent font-bold text-navy"><a href="{% url 'wiki:wiki_backend' %}">点击访问 <i class="fa fa-arrow-circle-right"></i></a></div>
+                        <small>内容管理系统</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-3">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <h5>文章显示、搜索及登录评论</h5>
+                        <h1 class="no-margins">WiKi</h1>
+                        <div class="stat-percent font-bold text-danger"><a href="{% url 'wiki:wiki_list_index' %}" target="_blank">点击访问 <i class="fa fa-arrow-circle-right"></i></a></div>
+                        <small>前端用户展示</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-3">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <h5>博客列表、展示及评论</h5>
+                        <h1 class="no-margins">Blog</h1>
+                        <div class="stat-percent font-bold text-danger"><a href="{% url 'blog:blog_list' %}">点击访问 <i class="fa fa-arrow-circle-right"></i></a></div>
+                        <small>我的个人博客</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-3">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <h5>博客公众展示访问</h5>
+                        <h1 class="no-margins">Blog</h1>
+                        <div class="stat-percent font-bold text-danger"><a href="{% url 'blog:blog_list_public' %}" target="_blank">点击访问 <i class="fa fa-arrow-circle-right"></i></a></div>
+                        <small>前端用户展示</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,223 @@
+{% extends 'backend/wiki_base.html' %}
+
+{% load static %}
+
+{% load wiki_tag_color %}
+
+{% load static %}
+
+{% load mptt_tags %}
+
+{% block title %}WiKi管理 | WiKi系统{% endblock %}
+
+{% block head %}WiKi{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'wiki:wiki_index' %}">主页</a></li>
+    <li class="breadcrumb-item active">WiKi 管理</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card card-primary card-outline">
+                    {% include 'backend/includes/title_tree.html' %}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card card-primary card-outline">
+                    <!-- /.card-header -->
+                    <div class="card-body">
+
+                        <div class="card card-widget widget-user">
+                            <div class="widget-user-header bg-info-active">
+                                <div class="row">
+                                    <div class="col-8 input-group ">
+                                        <h3 class="widget-user-username" title="标题使用*开头表示不可删除">{{ wiki_title.name }}&nbsp;<i onclick="showUpdate()" class="fa fa-edit"></i></h3>
+                                    </div>
+                                    <div class="col-4 input-group " style="display:none;" id="id_update_title">
+                                        <input type="text" class="form-control">
+                                        <span class="input-group-append">
+                                            <button type="button" class="btn btn-info btn-flat"><i class="fa fa-save"></i></button>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <h5 class="widget-user-desc">
+                                    {% for tag in wiki_content.tags.all %}
+                                    <span class="badge bg-{% random_color %} btn-sm">{{ tag.name }}</span>
+                                    {% endfor %}
+                                </h5>
+                            </div>
+                        {% if show_content %}
+                            <div class="widget-user-image">
+                                {% if wiki_content.created_user.user_profile.image %}
+                                    <img class="img-circle elevation-2" src="{{ wiki_content.created_user.user_profile.image.url }}" alt="User Avatar">
+                                {% else %}
+                                    <img class="img-circle elevation-2" src="{% static 'account/default.jpg' %}" alt="User Avatar">
+                                {% endif %}
+                            </div>
+                            <div class="card-footer">
+                                <div class="row">
+                                    <div class="col-sm-4 border-right">
+                                        <div class="description-block">
+                                            <h5 class="description-header">点击数</h5>
+                                            <span class="description-text">{{ wiki_content.views }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4 border-right">
+                                        <div class="description-block">
+                                            <h5 class="description-header">{{ wiki_content.created_user }}</h5>
+                                            <span class="description-text">{{ wiki_content.created_time }} 创建</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="description-block">
+                                            {% if wiki_content.updated_user %}
+                                            <h5 class="description-header">{{ wiki_content.updated_user }}</h5>
+                                            <span class="description-text">{{ wiki_content.updated_time }} 更新</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        </div>
+                        {% if show_content %}
+                            <p id="id_wiki_content">{{ wiki_content.content }}</p>
+                        {% else %}
+                            暂无内容
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card card-primary card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">回复</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        {% if show_comment %}
+                            <div class="direct-chat-messages">
+                                <!-- Message. Default to the left -->
+                                {% recursetree wiki_content.wiki_comments.all %}
+                                    {% if node.is_root_node %}
+                                        <hr>
+                                    {% endif %}
+                                    <div class="direct-chat-msg {% if node.created_user != wiki_content.created_user %}right{% endif %}"
+                                         onmouseover="showDel{{ node.id }}()"
+                                         onmouseout="hideDel{{ node.id }}()"
+                                        id="node_content_{{ node.id }}" style="display: block">
+                                        <div class="direct-chat-info clearfix">
+                                            <span class="direct-chat-name {% if node.created_user == wiki_content.created_user %}float-left{% else %}float-right{% endif %}">{{ node.created_user }}</span>
+                                            <span class="direct-chat-timestamp {% if node.created_user == wiki_content.created_user %}float-right{% else %}float-left{% endif %}">{{ node.created_time }}</span>
+                                        </div>
+                                        {% if node.created_user.user_profile.image %}
+                                            <img class="direct-chat-img" src="{{ node.created_user.user_profile.image.url }}" alt="Message User Image">
+                                        {% else %}
+                                            <img class="direct-chat-img" src="{% static 'account/default.jpg' %}" alt="Message User Image">
+                                        {% endif %}
+                                        <div class="direct-chat-text">
+                                            {% if node.is_root_node %}
+                                                <b>{{ node.content }}</b>
+                                            {% else %}
+                                                {{ node.content }}
+                                            {% endif %}
+                                            <div class="float-right"
+                                                  style="display: none;"
+                                                  id="id_show_del_{{ node.id }}">
+                                                <a {% if node.is_root_node %} onclick="delCommentConfirmation{{ node.id }}('，及该评论的回复') {% else %} onclick="delCommentConfirmation{{ node.id }}('') {% endif %}">
+                                                    <span class="badge badge-primary">删除</span>
+                                                </a>
+                                            </div>
+
+                                            <script>
+                                                function showDel{{ node.id }}() {
+                                                    var delSpan = document.getElementById('id_show_del_{{ node.id }}');
+                                                    delSpan.style.display="block";
+                                                }
+                                                
+                                                function hideDel{{ node.id }}() {
+                                                    var delSpan = document.getElementById('id_show_del_{{ node.id }}');
+                                                    delSpan.style.display="none";
+                                                }
+
+                                                function delCommentConfirmation{{ node.id }} (other) {
+                                                    if (!confirm("确认删除评论：\"" + "{{ node.content }}" + "\"" + other + "？")) {
+                                                        window.event.returnValue = false;
+                                                    } else {
+                                                        delComment{{ node.id }}();
+                                                        var commentDiv=document.getElementById('node_content_{{ node.id }}');
+                                                        commentDiv.style.display='none';
+                                                    }
+                                                }
+
+                                                function delComment{{ node.id }}() {
+                                                    // alert(node_id);
+                                                    $.ajax({
+                                                        url: "{% url 'wiki:del_comment' %}?comment_id=" + "{{ node.id }}",
+                                                        type: 'GET',
+                                                        dataType: 'json',
+                                                        timeout: 1000,
+                                                        cache: false,
+                                                        // beforeSend: LoadFunction, //加载执行方法
+                                                        // error: erryFunction,  //错误执行方法
+                                                        //success: succFunction //成功执行方法
+                                                    });
+
+                                                    function succFunction(msg) {
+                                                        alert(msg);
+                                                    }
+                                                }
+                                            </script>
+
+                                        </div>
+                                    </div>
+                                    {% if not node.is_leaf_node %}
+                                        {{ children }}
+                                    {% endif %}
+
+                                {% endrecursetree %}
+                            </div>
+
+                        {% else %}
+                            暂无评论
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block js %}
+
+{% if show_content %}
+    <script type="text/javascript">
+        $(document).ready(() => {
+            var src = $('#id_wiki_content').text();
+            var converter = new showdown.Converter();
+            var html = converter.makeHtml(src);
+            $('#id_wiki_content').html(html);
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+{% endif %}
+
+<script type="text/javascript">
+    function showUpdate(){
+        //获取要显示的div对象
+        var otherDiv=document.getElementById('id_update_title');
+        //显示
+        otherDiv.style.display="";
+    }
+</script>
+{% endblock %}

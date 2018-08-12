@@ -1,0 +1,473 @@
+{% extends 'foreend/wiki_base.html' %}
+
+{% load static %}
+
+<!--加载模板标签，用于tag的随机颜色-->
+{% load wiki_tag_color %}
+
+{% load wiki_template_tags %}
+
+{% block css %}
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/tomorrow-night-eighties.min.css">
+<!--<link rel="stylesheet" href="{% static 'editor.md-master/css/editormd.min.css' %}" />-->
+<!--使用editor.md渲染-->
+<!--<link rel="stylesheet" href="{% static 'editor.md-master/examples/css/style.css' %}" />-->
+<link rel="stylesheet" href="{% static 'editor.md-master/css/editormd.preview.css' %}" />
+{% endblock %}
+
+{% block title %}
+{{ block.super }} | {{ current_title.name }}
+{% endblock %}
+
+{% block content %}
+<div class="single">
+    <h3>
+        {% remove_title_asterisk current_title.name %}
+        <small>
+            {% for tag in current_title.wiki_content.tags.all %}
+                <span class="badge badge-{% random_color %}">{{ tag.name }}</span>
+            {% endfor %}
+        </small>
+    </h3>
+
+    {% if show_wiki %}
+        <div class="single-left">
+            <p>
+                创建于 <span>{{ current_title.wiki_content.created_time }}</span><br>
+                更新于 <span>{{ current_title.wiki_content.updated_time }}</span>
+            </p>
+            {% if current_title.wiki_images.count == 0 %}
+                <img src="{% static 'img/no_image.jpg' %}" alt=" " class="img-responsive"/>
+            {% else %}
+                <img src="{{ current_title.wiki_images.last.image.url }}" style="max-height:150px; width: auto;" alt=" " class="img-responsive"/>
+            {% endif %}
+        </div>
+        <div class="single-right">
+            <h4 style="color: #FF5151">
+                <!-- 模板标签正常显示html -->
+                推荐指数：
+                {% autoescape off %}
+                    {% show_star current_title.wiki_content.recommend %}
+                {% endautoescape %}
+            </h4>
+            <!--显示字数-->
+            <p>本文共 {{ current_title.wiki_content.content|wordcount }} 个字</p>
+            <hr>
+            <!--显示作者寄语-->
+            {% if current_title.wiki_content.author_message %}
+                <p style="font-size: 18px;">作者寄语</p>
+                <p>{{ current_title.wiki_content.author_message  }}</p>
+            {% endif %}
+        </div>
+        <div class="clearfix"> </div>
+        <hr>
+
+
+
+        <div id="EditorMdview">
+            <p class="tortor" id="content_to_md">{{ current_title.wiki_content.content }}</p>
+        </div>
+        <hr>
+
+        <!--显示回复列表-->
+        <div class="three-com">
+            <h3>{{ other_comments.count }}条评论<span>on</span> <label>《{{ current_title.name }}》</label></h3>
+            {% for wiki_comment in wiki_comments %}
+                {% if wiki_comment.is_root_node %}
+                    <div class="tom-grid" style="padding: 0.5em 0;">
+                        <div class="tom">
+                            {% if wiki_comment.created_user.user_profile.image %}
+                                <img src="{{ wiki_comment.created_user.user_profile.image.url }}" alt=" ">
+                            {% else %}
+                                <img src="{% static 'account/default.jpg' %}" alt=" ">
+                            {% endif %}
+                        </div>
+                        <div class="tom-right">
+                            <div class="Hardy">
+                                <h4><a href="#">{{ wiki_comment.created_user }}</a></h4>
+                                <p><label>{{ wiki_comment.created_time }}</label></p>
+                            </div>
+                            {% if not wiki_comment.get_children %}
+                                <!--当还没对其他人进行回复时，显示回复按钮-->
+                                <div class="reply">
+                                    <button class="btn" onclick="showReplyForm_{{ wiki_comment.id }}()">回复</button>
+                                </div>
+
+                                <!--点击回复显示回复表单，遍历显示多个点击事件-->
+                                <script type="text/javascript">
+                                    function showReplyForm_{{ wiki_comment.id }}(){
+                                        //获取要显示的div对象
+                                        var  otherDiv=document.getElementById('showReplyForm_{{ wiki_comment.id }}');
+                                        //显示
+                                        otherDiv.style.display="";
+                                    }
+                                </script>
+
+                            {% endif %}
+                            <div class="clearfix"> </div>
+                            <p class="lorem">
+                                {{ wiki_comment.content }}
+                            </p>
+
+                            {% if not wiki_comment.get_children %}
+                                <!--当还没对其他人进行回复时，可以显示回复框-->
+                                <div class="reply" id="showReplyForm_{{ wiki_comment.id }}" style="display: none">
+                                    <form id="jsReplyCommentForm_{{ wiki_comment.id }}">
+                                        <!--当前文章的id-->
+                                        <input type="text" name="wiki_content_id" id="jsWiKi_{{ wiki_comment.id }}" value="{{ current_title.wiki_content.id }}" hidden />
+                                        <!--当前评论的id-->
+                                        <input type="text" name="wiki_comment_id" id="jsWiKiComment_{{ wiki_comment.id }}" value="{{ wiki_comment.id }}" hidden />
+                                        {% csrf_token %}
+                                        <div class="input-group">
+                                            <input type="text" name="content" id="jsReplyComment_{{ wiki_comment.id }}" class="form-control" required placeholder="回复：{{ wiki_comment.content }}">
+                                            <span class="input-group-btn">
+                                                <button class="btn btn-default" id="jsReplyButton_{{ wiki_comment.id }}" type="button">回复评论</button>
+                                            </span>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!--作者回复别人的留言，遍历显示多个回复表单-->
+                                <script src="{% static 'WiKiFront/js/jquery-1.11.1.min.js' %}"></script>  <!-- 不引入会出错 caught ReferenceError: $ is not defined -->
+                                <script>
+                                    $(function () {
+                                        $("#jsReplyButton_{{ wiki_comment.id }}").on("click", function () {
+                                            $.ajax({
+                                                cache: false,
+                                                type: "POST",
+                                                url: "{% url 'wiki:add_comment' %}",
+                                                data: $("#jsReplyCommentForm_{{ wiki_comment.id }}").serialize(),
+                                                async: true,
+                                                success: function (data) {
+                                                    if(data.valid_status === "success") {
+                                                        // alert(data);
+                                                        $("#jsReplyCommentForm_{{ wiki_comment.id }}")[0].reset();
+                                                        window.location.reload(true);
+                                                        // alert("提交成功！")
+                                                    } else if (data.valid_status === "fail") {
+                                                        var hm = "";
+                                                        // alert(data.msg.content);
+                                                        if (data.msg.content) {
+                                                            hm += '评论：' + data.msg.content
+                                                        }
+                                                        alert(hm);
+                                                    }
+                                                },
+                                            });
+                                        });
+                                    })
+                                </script>
+
+                            {% endif %}
+
+                        </div>
+                        <div class="clearfix"> </div>
+                    </div>
+                {% else %}
+                    <div class="well" style="font-size: 10px; padding: 10px;"><b>作者回复：</b>{{ wiki_comment.content }}</div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!--显示回复框-->
+        <div class="leave-comment">
+            <h4>请留下你的评论</h4>
+            <p>智慧如你，不想发表一点想法咩~</p>
+            {% if request.user.is_authenticated %}
+                <form id="jsWiKiCommentForm">
+                    <input type="text" name="wiki_content_id" id="jsWiKi" value="{{ current_title.wiki_content.id }}" hidden />
+                    <textarea placeholder="留下你的评论吧" name="content" id="jsContent"></textarea>
+                    <p id="jsTips"></p>
+                    {% csrf_token %}
+                    <div class="join">
+                        <input class="btn" id="jsButton" type="text" style="background: #E0BD62; color: #fff; font-size: 1em" value="评论" />
+                    </div>
+                    <div class="clearfix"> </div>
+                </form>
+            {% else %}
+                <textarea placeholder="登录后评论" name="content" disabled></textarea>
+                <div class="join">
+                    <a class="btn" href="{% url 'account:login' %}?next={% url 'wiki:wiki_detail' current_title.id %}" style="background: #E0BD62; color: #fff; font-size: 1em" >登录后评论</a>
+                </div>
+                <div class="clearfix"> </div>
+            {% endif %}
+        </div>
+    {% else %}
+        文章尚未编辑
+    {% endif %}
+</div>
+
+<!--返回顶部按钮显示-->
+<div style="width:25px; height:25px; background: #E0BD62; text-align:center; font-size:small; line-height:25px; border:1px solid #998993; position:fixed; right:10px; bottom:0;
+border-bottom-color:#333; border-right-color:#333; margin:10px; cursor:pointer" id="rTop" onclick="toTop()" title="返回顶部"><span class="glyphicon glyphicon-arrow-up"></span></div>
+
+{% endblock %}
+
+{% block js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.8.6/showdown.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(() => {
+        let src = $('#content_to_md').text();
+        let converter = new showdown.Converter();
+        let html = converter.makeHtml(src);
+        $('#content_to_md').html(html);
+        hljs.initHighlightingOnLoad();
+    })
+</script>
+
+
+<!--使用editor.md渲染-->
+<!--<script src="{% static 'editor.md/examples/js/jquery.min.js' %}"></script>-->
+<!--<script src="{% static 'editor.md/lib/marked.min.js' %}"></script>-->
+<!--<script src="{% static 'editor.md/lib/prettify.min.js' %}"></script>-->
+<!--<script src="{% static 'editor.md/lib/raphael.min.js' %}"></script>-->
+<!--<script src="{% static 'editor.md/lib/underscore.min.js' %}"></script>-->
+<!--<script src="{% static 'editor.md/lib/sequence-diagram.min.js' %}"></script>-->
+<!--<script src="{% static 'editor.md/lib/flowchart.min.js' %}"></script>-->
+<!--<script src="{% static 'editor.md/lib/jquery.flowchart.min.js' %}"></script>-->
+<!--<script src="{% static 'editor.md/editormd.min.js' %}"></script>-->
+<!--使用editor.md渲染，需要引入上部的js-->
+<!--<script>-->
+    <!--$(function () {-->
+        <!--// 先对容器初始化，在需要展示的容器中创建textarea隐藏标签，-->
+
+        <!--var content=$("#content_to_md").text();//获取需要转换的内容-->
+        <!--$("#EditorMdview").html('<textarea id="content_to_md_temp" style="display: none;"></textarea>');-->
+        <!--// alert(content);-->
+        <!--$("#content_to_md_temp").val(content);//将需要转换的内容加到转换后展示容器的textarea隐藏标签中-->
+
+        <!--editormd.markdownToHTML("EditorMdview", {-->
+            <!--htmlDecode: "style,script,iframe", //可以过滤标签解码-->
+            <!--emoji: true,-->
+            <!--taskList:true,-->
+            <!--tex: true,               // 默认不解析-->
+            <!--flowChart:true,         // 默认不解析-->
+            <!--sequenceDiagram:true,  // 默认不解析-->
+            <!--editorTheme: "pastel-on-dark",-->
+                    <!--theme: "gray",-->
+        <!--});-->
+    <!--})-->
+<!--</script>-->
+
+<!--js POST提交表单数据，评论文章-->
+<script>
+    $(function () {
+        $("#jsButton").on("click", function () {
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "{% url 'wiki:add_comment' %}",
+                data: $("#jsWiKiCommentForm").serialize(),
+                async: true,
+                success: function (data) {
+                    if(data.valid_status === "success") {
+                        // alert(data);
+                        $("#jsWiKiCommentForm")[0].reset();
+                        $("#jsTips").html("");
+                        window.location.reload(true);
+                        // alert("提交成功！")
+                    } else if(data.valid_status === "fail") {
+                        var hm = "";
+                        // alert(data.msg.content);
+                        if (data.msg.content) {
+                            hm += '评论：' + data.msg.content
+                        }
+                        $("#jsTips").html(hm);
+                    }
+                },
+            });
+        });
+    })
+</script>
+
+<!--返回顶部按钮-->
+<script>
+    window.onscroll=function(){
+        if(document.body.scrollTop||document.documentElement.scrollTop>0){
+            document.getElementById('rTop').style.display="block"
+        }else{
+            document.getElementById('rTop').style.display="none"
+        }
+    }
+</script>
+
+<script>
+    function toTop() {
+        window.scroll(0, 0);
+    }
+</script>
+
+
+
+<script type="text/javascript">
+ //是否显示导航栏
+ var showNavBar = true;
+ //是否展开导航栏
+ var expandNavBar = true;
+
+ $(document).ready(function(){
+    var h1s = $("p").find("h1");
+    var h2s = $("p").find("h2");
+    var h3s = $("p").find("h3");
+    var h4s = $("p").find("h4");
+    var h5s = $("p").find("h5");
+    var h6s = $("p").find("h6");
+
+    var headCounts = [h1s.length, h2s.length, h3s.length, h4s.length, h5s.length, h6s.length];
+    // alert(headCounts);  //得到查询到的各个标题列表，例如：3,3,14,4,0,0
+    // alert(headCounts.length);  // 6
+    var vH1Tag = null;
+    var vH2Tag = null;
+    for(var i = 0; i < headCounts.length; i++){
+        if(headCounts[i] > 0){
+            if(vH1Tag == null){
+                vH1Tag = 'h' + (i + 1);  // h1
+            }else{
+                vH2Tag = 'h' + (i + 1);
+            }
+        }
+    }
+    if(vH1Tag == null){
+        return;
+    }
+    // alert(vH1Tag + vH2Tag);  //得到h的区间： h1   h4
+
+    $("body").prepend('<div class="BlogAnchor">' +
+        '<span  onclick="$(\'.BlogAnchor\').hide();">×</span>' +
+        '<p>' +
+            '<b id="AnchorContentToggle" title="收起" >目录▲</b>' +
+        '</p>' +
+        '<div class="AnchorContent" id="AnchorContent"> </div>' +
+    '</div>' );
+
+    var vH1Index = 0;
+    var vH2Index = 0;
+    $("p").find("h1,h2,h3,h4,h5,h6").each(function(i,item){
+        var id = '';
+        var name = '';
+        var tag = $(item).get(0).tagName.toLowerCase();
+        // alert(tag);
+        var className = '';
+        if(tag === vH1Tag){
+            id = name = ++vH1Index;
+            // alert(id);  // 1
+            name = id;
+            vH2Index = 0;
+            className = 'item_h1';
+        }else if(tag === vH2Tag){
+            id = vH1Index + '_' + ++vH2Index;
+            // alert(id);
+            name = vH1Index + '.' + vH2Index;
+            className = 'item_h2';
+        }
+        // alert(item + id);
+        $(item).attr("id","wow"+id);
+        $(item).addClass("wow_head");
+        $("#AnchorContent").css('max-height', ($(window).height() - 180) + 'px');
+        $("#AnchorContent").append('<li><a class="nav_item '+className+' anchor-link" onclick="return false;" href="#" link="#wow'+id+'">'+name+" · "+$(this).text()+'</a></li>');
+    });
+
+    $("#AnchorContentToggle").click(function(){
+        var text = $(this).html();
+        if(text=="目录▲"){
+            $(this).html("目录▼");
+            $(this).attr({"title":"展开"});
+        }else{
+            $(this).html("目录▲");
+            $(this).attr({"title":"收起"});
+        }
+        $("#AnchorContent").toggle();
+    });
+    $(".anchor-link").click(function(){
+        $("html,body").animate({scrollTop: $($(this).attr("link")).offset().top}, 500);
+    });
+
+    var headerNavs = $(".BlogAnchor li .nav_item");
+    var headerTops = [];
+    $(".wow_head").each(function(i, n){
+        headerTops.push($(n).offset().top);
+    });
+    $(window).scroll(function(){
+        var scrollTop = $(window).scrollTop();
+        $.each(headerTops, function(i, n){
+            var distance = n - scrollTop;
+            if(distance >= 0){
+                $(".BlogAnchor li .nav_item.current").removeClass('current');
+                $(headerNavs[i]).addClass('current');
+                return false;
+            }
+        });
+    });
+
+    if(!showNavBar){
+        $('.BlogAnchor').hide();
+    }
+    if(!expandNavBar){
+        $(this).html("目录▼");
+        $(this).attr({"title":"展开"});
+        $("#AnchorContent").hide();
+    }
+ });
+</script>
+
+
+
+<style>
+    /*导航*/
+    .BlogAnchor {
+        background: #f1f1f1;
+        padding: 10px;
+        line-height: 180%;
+        position: fixed;
+        right: 48px;
+        top: 48px;
+        border: 1px solid #aaaaaa;
+    }
+    .BlogAnchor p {
+        font-size: 18px;
+        color: #15a230;
+        margin: 0 0 0.3rem 0;
+        text-align: right;
+    }
+    .BlogAnchor .AnchorContent {
+        padding: 5px 0px;
+        overflow: auto;
+    }
+    .BlogAnchor li{
+        text-indent: 0.5rem;
+        font-size: 14px;
+        list-style: none;
+    }
+    .BlogAnchor li .nav_item{
+        padding: 3px;
+    }
+    .BlogAnchor li .item_h1{
+        margin-left: 0rem;
+    }
+    .BlogAnchor li .item_h2{
+        margin-left: 2rem;
+        font-size: 0.8rem;
+    }
+    .BlogAnchor li .nav_item.current{
+        color: white;
+        background-color: #5cc26f;
+    }
+    #AnchorContentToggle {
+        font-size: 13px;
+        font-weight: normal;
+        color: #FFF;
+        display: inline-block;
+        line-height: 20px;
+        background: #5cc26f;
+        font-style: normal;
+        padding: 1px 8px;
+    }
+    .BlogAnchor a:hover {
+        color: #5cc26f;
+    }
+    .BlogAnchor a {
+        text-decoration: none;
+    }
+</style>
+{% endblock %}

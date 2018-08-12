@@ -1,0 +1,102 @@
+{% load mptt_tags %}
+
+
+<div class="ibox float-e-margins">
+    <div class="ibox-title">
+        <h5>标题树</h5>
+    </div>
+    <div class="ibox-content">
+        <form action="{% url 'wiki:wiki_backend' %}" method="get">
+            <div class="input-group">
+                <input type="text" class="form-control" name="keywords" placeholder="仅支持搜索标题" value="{% if keywords %}{{ keywords }}{% endif %}" class="form-control">
+                <span class="input-group-btn"><button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button></span>
+            </div>
+        </form>
+        <div id="treeview5" class="test treeview">
+            <ul class="list-group">
+                {% recursetree titles %}
+                <li class="list-group-item node-treeview5" style="">
+                    <div class="btn-group">
+                        <span class="icon" data-toggle="dropdown" aria-expanded="true"><i class="click-collapse glyphicon glyphicon-chevron-down"></i></span>
+                        <ul class="dropdown-menu" style="right: auto;">
+                            <li><a href="{% url 'wiki:wiki_edit' node.id %}">修改</a></li>
+                            {% if node.is_root_node %}
+                            <li><a type="button" onclick="add_title(this, '{{ node.id }}', '{{ node.is_root_node }}', is_add_child=0)" data-toggle="modal">添加根文档</a></li>
+                            {% endif %}
+                            <li><a type="button" onclick="add_title(this, '{{ node.id }}', '{{ node.is_root_node }}', is_add_child=1)" data-toggle="modal">添加子文档</a></li>
+                            {% ifnotequal node.name|slice:"0:1" "*" %}
+                            <!--* 表示不能删除的，当以*开头，则删除功能不显示-->
+                            <li><a href="{% url 'wiki:del_title' %}?node_id={{ node.id }}" onclick="delete_confirmation()">删除该文档及子文档</a></li>
+                            {% endifnotequal %}
+                            <li><a onclick="move_title(this, '{{ node.id }}', '{{ node.name }}')" data-toggle="modal" data-target="#moveNodeModal">移动到</a></li>
+                        </ul>
+                    </div>
+
+                    {% url 'wiki:wiki_content_backend' node.id as wiki_node_url %}
+                    <a href="{% url 'wiki:wiki_content_backend' node.id %}" title="{{ node.name }}" {% if wiki_node_url == request.path %}style="color: #0a0a0a" {% endif %}>
+                        {# node.show_name #}
+                        {% ifequal node.name|slice:":1" "*" %}{{ node.name|slice:"1:" }}{% else %}{{ node.name }}{% endifequal %}
+                    </a>
+                    {% if not node.is_leaf_node %}
+                        <ul class="list-group">
+                            {{ children }}
+                        </ul>
+                    {% endif %}
+                </li>
+                {% endrecursetree %}
+            </ul>
+        </div>
+
+        <br><hr><br>
+
+        <div id="jstree_div">
+            <ul>
+                {% recursetree titles %}
+                    <li class="jstree-open">
+                        {% if node.is_leaf_node %}
+                            <li><a href="#">{{ node.name }}</a></li>
+                        {% else %}
+                            <li><a href="#">{{ node.name }}</a></li>
+                            <ul>
+                                <li><a href="#">{{ children }}</a></li>
+                            </ul>
+                        {% endif %}
+                    </li>
+                {% endrecursetree %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 操作includes/title-tree-modal.html中的模态框
+
+    // 添加子文档或者是根文档
+    function add_title(obj, node_id, is_root_node, is_add_child) {
+        $('#node_id').val(node_id);
+        $('#is_root_node').val(is_root_node);
+        $('#is_add_child').val(is_add_child);
+        if (is_add_child) {
+            $('#addTitleModalLabel').html("添加子文档");
+        } else {
+            $('#addTitleModalLabel').html("添加根文档");
+        }
+        // 最后显示出模态框
+        $('#addTitleModal').modal('show');
+    }
+
+    // 删除标题
+    function delete_confirmation() {
+        if (!confirm("确认删除该文档和子文档？")) {
+        window.event.returnValue = false;
+        }
+    }
+
+    // 移动标题到其他目录
+    function move_title(obj, node_id, node_name) {
+        $('#moveNodeModalLabel').html('移动 [' + node_name + '] 到');
+        let current_title = document.getElementById('id_current_title');
+        current_title.value = node_id;
+    }
+</script>
+

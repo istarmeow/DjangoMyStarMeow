@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+
+{% block logo %}事件管理系统{% endblock %}
+
+{% block menu %}
+<nav class="mt-2">
+    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
+        data-accordion="false">
+        <!-- Add icons to the links using the .nav-icon class
+             with font-awesome or any other icon font library -->
+        <li class="nav-item has-treeview {% if request.path in EVENT_MENU_GROUP %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.path in EVENT_MENU_GROUP %}active{% endif %}">
+                <i class="nav-icon fa fa-table"></i>
+                <p>
+                    事件系统
+                    <i class="fa fa-angle-left right"></i>
+                </p>
+            </a>
+
+            <ul class="nav nav-treeview">
+                {% url 'event:list' as event_url %}
+                <li class="nav-item">
+                    <a href="{% url 'event:list' %}" class="nav-link {% if request.path == event_url %}active{% endif %}">
+                        <i class="fa fa-circle-o nav-icon"></i>
+                        <p>事件列表</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'event:event_filter' 0 0 0 0 0 %}" class="nav-link {% if request.path == visit_url %}active{% endif %}">
+                        <i class="fa fa-circle-o nav-icon"></i>
+                        <p>事件筛选</p>
+                    </a>
+                </li>
+                {% url 'event:event_create' as event_create_url %}
+                <li class="nav-item">
+                    <a href="{% url 'event:event_create' %}" class="nav-link {% if request.path == event_create_url %}active{% endif %}">
+                        <i class="fa fa-circle-o nav-icon"></i>
+                        <p>事件创建</p>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <li class="nav-item has-treeview {% if request.path in OTHER_MENU_GROUP %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.path in OTHER_MENU_GROUP %}active{% endif %}">
+                <i class="nav-icon fa fa-table"></i>
+                <p>
+                    Other
+                    <i class="fa fa-angle-left right"></i>
+                </p>
+            </a>
+            <ul class="nav nav-treeview">
+                {% url 'multiple_filter:other1' as other1_url %}
+                <li class="nav-item">
+                    <a href="{% url 'multiple_filter:other1' %}" class="nav-link {% if request.path == other1_url %}active{% endif %}">
+                        <i class="fa fa-circle-o nav-icon"></i>
+                        <p>one</p>
+                    </a>
+                </li>
+                {% url 'multiple_filter:other2' as other2_url %}
+                <li class="nav-item">
+                    <a href="{% url 'multiple_filter:other2' %}" class="nav-link {% if request.path == other2_url %}active{% endif %}">
+                        <i class="fa fa-circle-o nav-icon"></i>
+                        <p>two</p>
+                    </a>
+                </li>
+                {% url 'multiple_filter:course' 0 0 0 as course_url %}
+                <li class="nav-item">
+                    <a href="{% url 'multiple_filter:course' 0 0 0 %}" class="nav-link {% if request.path == course_url %}active{% endif %}">
+                        <i class="fa fa-circle-o nav-icon"></i>
+                        <p>课程</p>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+    </ul>
+</nav>
+{% endblock menu %}
